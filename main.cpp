@@ -8,12 +8,10 @@
 
 
 // TODO: custom window handling.
-// Window* myWindow;
+Window* window = new Window();
 SDL_Renderer* renderer;
-SDL_Window*   window;
 TTF_Font* font;
 SDL_Rect boardScreenPosition;
-uint32_t windowFlags = SDL_WINDOW_RESIZABLE;
 bool running = true;
 
 SDL_Texture* texturePieces;
@@ -29,25 +27,25 @@ void resetBoard(){
 }
 
 void updateBoardScreenPosition(){
-  int windowWidth, windowHeight;
-  SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-
-  boardScreenPosition = {(int) (0.05*windowHeight), (int) (0.05*windowHeight), 0, 0};
+  // int windowWidth, windowHeight;
+  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+  
+  boardScreenPosition = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
   int boardScreenSize = 0;
-  if(windowHeight > windowWidth) boardScreenSize = 0.9 * windowHeight;
-  else boardScreenSize = 0.9 * windowHeight;
+  if(window->position.h > window->position.w) boardScreenSize = 0.9 * window->position.h;
+  else boardScreenSize = 0.9 * window->position.h;
   boardScreenPosition.h = boardScreenPosition.w = boardScreenSize;
 }
 
 // TODO: better button handling
 void updateResetButtonScreenPosition(){
-  int windowWidth, windowHeight;
-  SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+  // int windowWidth, windowHeight;
+  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
   SDL_Rect rightSpace = {
     boardScreenPosition.x + boardScreenPosition.w,
     boardScreenPosition.y,
-    windowWidth - boardScreenPosition.x - boardScreenPosition.w,
+    window->position.w - boardScreenPosition.x - boardScreenPosition.w,
     boardScreenPosition.h
   };
   
@@ -74,13 +72,13 @@ void updateResetButtonScreenPosition(){
 }
 
 void updateSwitchSideButtonScreenPosition(){
-  int windowWidth, windowHeight;
-  SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+  // int windowWidth, windowHeight;
+  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
   SDL_Rect rightSpace = {
     boardScreenPosition.x + boardScreenPosition.w,
     boardScreenPosition.y,
-    windowWidth - boardScreenPosition.x - boardScreenPosition.w,
+    window->position.w - boardScreenPosition.x - boardScreenPosition.w,
     boardScreenPosition.h
   };
     
@@ -209,14 +207,9 @@ void updateSelectionOnUp(){
 }
 
 
-/* TODO: bugfix, sometimes doesn't correctly resize after exiting fullscreen*/
-void changeFullscreen(){
-  windowFlags = SDL_GetWindowFlags(window);
-  SDL_SetWindowFullscreen(window, (windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) ?
-			  0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-}
-
 void handleInput(SDL_Event event){
+  window->updateOnResize();
+
   updateBoardScreenPosition();
   updateResetButtonScreenPosition();
   updateSwitchSideButtonScreenPosition();
@@ -226,7 +219,8 @@ void handleInput(SDL_Event event){
     case SDL_QUIT:
       running = false; break;
     case SDL_MOUSEMOTION:
-      mouse.position = {event.motion.x, event.motion.y}; break;
+      mouse.position = {event.motion.x, event.motion.y};
+      break;
       
     case SDL_MOUSEBUTTONUP:
       updatePickupOnUp();
@@ -245,8 +239,7 @@ void handleInput(SDL_Event event){
       
     case SDL_KEYDOWN:
       switch(event.key.keysym.sym){
-      case SDLK_f:
-	changeFullscreen(); break;
+      case SDLK_f: window->changeFullscreen(); break;
       case SDLK_q: running = false; break;
       } break;
     }
@@ -275,6 +268,7 @@ void renderTiles(){
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
     }
 
+  
   if(selection.any){
     SDL_Rect tileSrcRect = {SPRITE_TILE_SIZE, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};;
     if(!isWhite(selection.piece.position)) tileSrcRect.y += SPRITE_TILE_SIZE;
@@ -301,6 +295,7 @@ void renderTiles(){
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
     }
   }
+  
 }
 
 SDL_Rect getPieceSrcRect(Piece& piece){
@@ -338,13 +333,13 @@ void renderPieces(){
 int main(){
   std::cout << "Hello, world!" << std::endl; 
 
-  SDL_CreateWindowAndRenderer(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT, windowFlags, &window, &renderer);
-  // myWindow->initialize(renderer);
-  
+  // SDL_CreateWindowAndRenderer(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT, windowFlags, &window, &renderer);
+  // window->initialize();
+  renderer = SDL_CreateRenderer(window->sdlWindow, -1, 0);
+
   SetRenderDrawColor(renderer, BACKGROUND_COLOR);
   SDL_RenderClear(renderer);
   SDL_RenderPresent(renderer);
-
 
   IMG_Init(IMG_INIT_PNG);
   

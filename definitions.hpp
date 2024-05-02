@@ -63,17 +63,23 @@ typedef struct{
 struct Window{
   SDL_Window* sdlWindow;
   SDL_Rect position;
+  uint32_t flags;
   
-  void initialize(SDL_Renderer* renderer){
-    SDL_CreateWindowAndRenderer(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT,
-				SDL_WINDOW_RESIZABLE, &sdlWindow, &renderer);
-      SetRenderDrawColor(renderer, BACKGROUND_COLOR);
-      SDL_RenderClear(renderer);
-      SDL_RenderPresent(renderer);
+  Window(){
+    position = {10, 10, WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT};
+    flags = SDL_WINDOW_RESIZABLE;
+    sdlWindow = SDL_CreateWindow("Simple chess GUI", position.x, position.y, position.w, position.h, flags);
   }
   
   void updateOnResize(){
     SDL_GetWindowSize(this->sdlWindow, &this->position.w, &this->position.h);};
+  
+  /* TODO: bugfix, sometimes doesn't correctly resize after exiting fullscreen*/
+  void changeFullscreen(){
+    flags = SDL_GetWindowFlags(sdlWindow);
+    SDL_SetWindowFullscreen(sdlWindow, (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ?
+			    0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+  };
 };
 
 typedef struct{
