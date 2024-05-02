@@ -8,14 +8,14 @@ std::vector<SDL_Point> getPawnMoves(SDL_Point p, PieceColor color){
   std::vector<SDL_Point> moves = {};
   if(color == White){
     if(p.y == 7) return {};
-    if(!board->isAnyPieceAt({p.x, p.y + 1})) moves.push_back({p.x, p.y + 1});
-    if((p.y == 1) && !board->isAnyPieceAt({p.x, 2}) && !board->isAnyPieceAt({p.x, 3}))
+    if(!isAnyPieceAt({p.x, p.y + 1})) moves.push_back({p.x, p.y + 1});
+    if((p.y == 1) && !isAnyPieceAt({p.x, 2}) && !isAnyPieceAt({p.x, 3}))
       moves.push_back({p.x, 3});
   }
   else{
     if(p.y == 0) return {};
-    if(!board->isAnyPieceAt({p.x, p.y - 1})) moves.push_back({p.x, p.y - 1});
-    if((p.y == 6) && !board->isAnyPieceAt({p.x, 5}) && !board->isAnyPieceAt({p.x, 4}))
+    if(!isAnyPieceAt({p.x, p.y - 1})) moves.push_back({p.x, p.y - 1});
+    if((p.y == 6) && !isAnyPieceAt({p.x, 5}) && !isAnyPieceAt({p.x, 4}))
       moves.push_back({p.x, 4});
     
   }
@@ -26,22 +26,22 @@ std::vector<SDL_Point> getRookMoves(SDL_Point p){
   std::vector<SDL_Point> moves = {};
 
   for(int x = p.x + 1; x < 8; x++){
-    if(board->isAnyPieceAt({x, p.y})) break;
+    if(isAnyPieceAt({x, p.y})) break;
     moves.push_back({x, p.y});
   }
   
   for(int x = p.x - 1; x >= 0; x--){
-    if(board->isAnyPieceAt({x, p.y})) break;
+    if(isAnyPieceAt({x, p.y})) break;
     moves.push_back({x, p.y});
   }
 
   for(int y = p.y + 1; y < 8; y++){
-    if(board->isAnyPieceAt({p.x, y})) break;
+    if(isAnyPieceAt({p.x, y})) break;
     moves.push_back({p.x, y});
   }
   
   for(int y = p.y - 1; y >= 0; y--){
-    if(board->isAnyPieceAt({p.x, y})) break;
+    if(isAnyPieceAt({p.x, y})) break;
     moves.push_back({p.x, y});
   }
   
@@ -54,28 +54,28 @@ std::vector<SDL_Point> getBishopMoves(SDL_Point p){
   for(int d = 1; ;d++){
     int x = p.x + d, y = p.y + d;
     if(x == 8 || y == 8) break;
-    if(board->isAnyPieceAt({x, y})) break;
+    if(isAnyPieceAt({x, y})) break;
     moves.push_back({x, y});
   }
 
   for(int d = 1; ;d++){
     int x = p.x + d, y = p.y - d;
     if(x == 8 || y == -1) break;
-    if(board->isAnyPieceAt({x, y})) break;
+    if(isAnyPieceAt({x, y})) break;
     moves.push_back({x, y});
   }
 
   for(int d = 1; ;d++){
     int x = p.x - d, y = p.y + d;
     if(x == -1 || y == 8) break;
-    if(board->isAnyPieceAt({x, y})) break;
+    if(isAnyPieceAt({x, y})) break;
     moves.push_back({x, y});
   }
 
   for(int d = 1; ;d++){
     int x = p.x - d, y = p.y - d;
     if(x == -1 || y == -1) break;
-    if(board->isAnyPieceAt({x, y})) break;
+    if(isAnyPieceAt({x, y})) break;
     moves.push_back({x, y});
   }
 
@@ -97,7 +97,7 @@ std::vector<SDL_Point> getKingMoves(SDL_Point& p){
       if((dx == 0) && (dy == 0)) continue;
       SDL_Point to = p + (SDL_Point){dx, dy};
       if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-      if(!board->isAnyPieceAt(to)) moves.push_back(to);
+      if(!isAnyPieceAt(to)) moves.push_back(to);
     }
 
   return moves;
@@ -114,7 +114,7 @@ std::vector<SDL_Point> getKnightMoves(SDL_Point& p){
     SDL_Point to = p + d;
     if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
 
-    if(!board->isAnyPieceAt(to)) moves.push_back(to);
+    if(!isAnyPieceAt(to)) moves.push_back(to);
   }
   
   return moves;
@@ -125,14 +125,14 @@ std::vector<SDL_Point> getPawnCaptureMoves(SDL_Point& p, PieceColor color){
   SDL_Point to;
   if(color == White){
     to = p + (SDL_Point){1, 1};
-    if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color)) moves.push_back(to);
+    if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
     to = p + (SDL_Point){-1, 1};
-    if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color)) moves.push_back(to);
+    if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
   }else{
     to = p + (SDL_Point){-1, -1};
-    if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color)) moves.push_back(to);
+    if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
     to = p + (SDL_Point){1, -1};
-    if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color)) moves.push_back(to);
+    if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
   }
   return moves;
 }
@@ -142,29 +142,29 @@ std::vector<SDL_Point> getRookCaptureMoves(SDL_Point p, PieceColor color){
   std::vector<SDL_Point> moves = {};
 
   for(int x = p.x + 1; x < 8; x++)
-    if(board->isAnyPieceAt({x, p.y})){
-      if(board->getPieceAt({x, p.y}).color != color)
+    if(isAnyPieceAt({x, p.y})){
+      if(getPieceAt({x, p.y}).color != color)
 	moves.push_back({x, p.y});
       break;
     }
   
   for(int x = p.x - 1; x >= 0; x--)
-    if(board->isAnyPieceAt({x, p.y})){
-      if(board->getPieceAt({x, p.y}).color != color)
+    if(isAnyPieceAt({x, p.y})){
+      if(getPieceAt({x, p.y}).color != color)
 	moves.push_back({x, p.y});
       break;
     }
   
   for(int y = p.y + 1; y < 8; y++)
-    if(board->isAnyPieceAt({p.x, y})){
-      if(board->getPieceAt({p.x, y}).color != color)
+    if(isAnyPieceAt({p.x, y})){
+      if(getPieceAt({p.x, y}).color != color)
 	moves.push_back({p.x, y});
       break;
     }
     
   for(int y = p.y - 1; y >= 0; y--)
-    if(board->isAnyPieceAt({p.x, y})){
-      if(board->getPieceAt({p.x, y}).color != color)
+    if(isAnyPieceAt({p.x, y})){
+      if(getPieceAt({p.x, y}).color != color)
 	moves.push_back({p.x, y});
       break;
     }
@@ -179,8 +179,8 @@ std::vector<SDL_Point> getBishopCaptureMoves(SDL_Point p, PieceColor color){
   for(int d = 1; ;d++){
     SDL_Point to = p + (SDL_Point){d, d};
     if(to.x == 8 || to.y == 8) break;
-    if(board->isAnyPieceAt(to)){
-      if(board->getPieceAt(to).color != color)
+    if(isAnyPieceAt(to)){
+      if(getPieceAt(to).color != color)
 	moves.push_back(to);
       break;
     }
@@ -189,8 +189,8 @@ std::vector<SDL_Point> getBishopCaptureMoves(SDL_Point p, PieceColor color){
   for(int d = 1; ;d++){
     SDL_Point to = p + (SDL_Point){d, -d};
     if(to.x == 8 || to.y == -1) break;
-    if(board->isAnyPieceAt(to)){
-      if(board->getPieceAt(to).color != color)
+    if(isAnyPieceAt(to)){
+      if(getPieceAt(to).color != color)
 	moves.push_back(to);
       break;
     }
@@ -199,8 +199,8 @@ std::vector<SDL_Point> getBishopCaptureMoves(SDL_Point p, PieceColor color){
   for(int d = 1; ;d++){
     SDL_Point to = p + (SDL_Point){-d, d};
     if(to.x == -1 || to.y == 8) break;
-    if(board->isAnyPieceAt(to)){
-      if(board->getPieceAt(to).color != color)
+    if(isAnyPieceAt(to)){
+      if(getPieceAt(to).color != color)
 	moves.push_back(to);
       break;
     }
@@ -209,8 +209,8 @@ std::vector<SDL_Point> getBishopCaptureMoves(SDL_Point p, PieceColor color){
   for(int d = 1; ;d++){
     SDL_Point to = p + (SDL_Point){-d, -d};
     if(to.x == -1 || to.y == -1) break;
-    if(board->isAnyPieceAt(to)){
-      if(board->getPieceAt(to).color != color)
+    if(isAnyPieceAt(to)){
+      if(getPieceAt(to).color != color)
 	moves.push_back(to);
       break;
     }
@@ -236,7 +236,7 @@ std::vector<SDL_Point> getKingCaptureMoves(SDL_Point& p, PieceColor color){
       if((dx == 0) && (dy == 0)) continue;
       SDL_Point to = p + (SDL_Point){dx, dy};
       if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-      if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color))
+      if(isAnyPieceAt(to) && (getPieceAt(to).color != color))
 	moves.push_back(to);
     }
 
@@ -255,7 +255,7 @@ std::vector<SDL_Point> getKnightCaptureMoves(SDL_Point& p, PieceColor color){
     SDL_Point to = p + d;
     if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
 
-    if(board->isAnyPieceAt(to) && (board->getPieceAt(to).color != color)) moves.push_back(to);
+    if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
   }
   
   return moves;
