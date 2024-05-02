@@ -4,14 +4,14 @@
 #include <SDL2/SDL_image.h>
 
 #include "definitions.hpp"
-#include "moves.hpp"
 
-
-// TODO: custom window handling.
 Window* window = new Window();
 SDL_Renderer* renderer;
 TTF_Font* font;
-SDL_Rect boardScreenPosition;
+Board* board = new Board();
+
+#include "moves.hpp"
+
 bool running = true;
 
 SDL_Texture* texturePieces;
@@ -21,32 +21,14 @@ Selection selection;
 Mouse mouse;
 Pickup picked;
 
-void resetBoard(){
-  pieces = initialPieces;
-  side = White;
-}
-
-void updateBoardScreenPosition(){
-  // int windowWidth, windowHeight;
-  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-  
-  boardScreenPosition = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
-  int boardScreenSize = 0;
-  if(window->position.h > window->position.w) boardScreenSize = 0.9 * window->position.h;
-  else boardScreenSize = 0.9 * window->position.h;
-  boardScreenPosition.h = boardScreenPosition.w = boardScreenSize;
-}
-
 // TODO: better button handling
 void updateResetButtonScreenPosition(){
-  // int windowWidth, windowHeight;
-  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
   SDL_Rect rightSpace = {
-    boardScreenPosition.x + boardScreenPosition.w,
-    boardScreenPosition.y,
-    window->position.w - boardScreenPosition.x - boardScreenPosition.w,
-    boardScreenPosition.h
+    board->position.x + board->position.w,
+    board->position.y,
+    window->position.w - board->position.x - board->position.w,
+    board->position.h
   };
   
   resetButton.position = {
@@ -72,14 +54,12 @@ void updateResetButtonScreenPosition(){
 }
 
 void updateSwitchSideButtonScreenPosition(){
-  // int windowWidth, windowHeight;
-  // SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-
+  
   SDL_Rect rightSpace = {
-    boardScreenPosition.x + boardScreenPosition.w,
-    boardScreenPosition.y,
-    window->position.w - boardScreenPosition.x - boardScreenPosition.w,
-    boardScreenPosition.h
+    board->position.x + board->position.w,
+    board->position.y,
+    window->position.w - board->position.x - board->position.w,
+    board->position.h
   };
     
   switchSideButton.position = {
@@ -107,16 +87,16 @@ void updateSwitchSideButtonScreenPosition(){
 
 
 SDL_Rect getTileScreenRect(SDL_Point tilePosition){
-  int tileSize = boardScreenPosition.w / 8;
+  int tileSize = board->position.w / 8;
   if(side == White)
     return {
-      boardScreenPosition.x + tilePosition.x*tileSize,
-      boardScreenPosition.y + (7 - tilePosition.y)*tileSize,
+      board->position.x + tilePosition.x*tileSize,
+      board->position.y + (7 - tilePosition.y)*tileSize,
       tileSize, tileSize};
  else
    return {
-     boardScreenPosition.x + tilePosition.x*tileSize,
-     boardScreenPosition.y + tilePosition.y*tileSize,
+     board->position.x + tilePosition.x*tileSize,
+     board->position.y + tilePosition.y*tileSize,
      tileSize, tileSize};
 }
 
@@ -135,30 +115,30 @@ void updatePickupOnUp(){
   if(!picked.any) return;
   picked.any = false;
   
-  if(!SDL_PointInRect(&mouse.position, &boardScreenPosition)) return;
+  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
 
   std::vector<SDL_Point> moves = getMoves(picked.piece);
   std::vector<SDL_Point> captureMoves = getCaptureMoves(picked.piece);
 
-  if(!isAnyPieceAt(tilePosition)){
+  if(!board->isAnyPieceAt(tilePosition)){
     for(auto& move: moves)
       if(move == tilePosition){
-	setPieceAt(picked.piece, tilePosition);
-	deletePieceAt(picked.piece.position);
+	board->setPieceAt(picked.piece, tilePosition);
+	board->deletePieceAt(picked.piece.position);
 	// switchSide();
       }
     
     return;
   }
 
-  if(getPieceAt(tilePosition).color == picked.piece.color) return;
+  if(board->getPieceAt(tilePosition).color == picked.piece.color) return;
     
   for(auto& move: captureMoves){
     if(move == tilePosition){
 
-      setPieceAt(picked.piece, tilePosition);
-      deletePieceAt(picked.piece.position);
+      board->setPieceAt(picked.piece, tilePosition);
+      board->deletePieceAt(picked.piece.position);
       // switchSide();
       return;
     }
@@ -169,10 +149,10 @@ void updatePickupOnUp(){
 }
 
 void updatePickupOnDown(){
-  if(!SDL_PointInRect(&mouse.position, &boardScreenPosition)) return;
+  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
-  for(auto& piece: pieces)
+  for(auto& piece: board->pieces)
     if(tilePosition == piece.position){
       picked.any = true;
       picked.piece = piece;
@@ -184,13 +164,13 @@ void updatePickupOnDown(){
 void updateSelectionOnDown(){
   bool was = selection.any;
   selection.any = false;
-  if(!SDL_PointInRect(&mouse.position, &boardScreenPosition)) return;
+  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
   if(was && selection.piece.position == tilePosition)
     selection.same = true;
 
-  for(auto& piece: pieces)
+  for(auto& piece: board->pieces)
     if(tilePosition == piece.position){
       selection.any = true;
       selection.piece = piece;
@@ -209,8 +189,8 @@ void updateSelectionOnUp(){
 
 void handleInput(SDL_Event event){
   window->updateOnResize();
+  board->updateOnResize(window);
 
-  updateBoardScreenPosition();
   updateResetButtonScreenPosition();
   updateSwitchSideButtonScreenPosition();
   
@@ -226,7 +206,7 @@ void handleInput(SDL_Event event){
       updatePickupOnUp();
       updateSelectionOnUp();
       if(SDL_PointInRect(&mouse.position, &resetButton.position))
-	resetBoard();
+        board->reset();
       if(SDL_PointInRect(&mouse.position, &switchSideButton.position))
 	switchSide();
     
@@ -309,7 +289,7 @@ SDL_Rect getPieceDstRect(Piece& piece){
 
 void renderPieces(){
     
-  for(auto& piece: pieces){
+  for(auto& piece: board->pieces){
     if(picked.any && picked.piece.position == piece.position) continue;
 
     SDL_Rect pieceSrcRect = getPieceSrcRect(piece);
@@ -333,8 +313,6 @@ void renderPieces(){
 int main(){
   std::cout << "Hello, world!" << std::endl; 
 
-  // SDL_CreateWindowAndRenderer(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT, windowFlags, &window, &renderer);
-  // window->initialize();
   renderer = SDL_CreateRenderer(window->sdlWindow, -1, 0);
 
   SetRenderDrawColor(renderer, BACKGROUND_COLOR);
@@ -348,8 +326,6 @@ int main(){
 
   TTF_Init();
   font = TTF_OpenFont("./SpaceMono-Regular.ttf", 200);
-
-  pieces = initialPieces;
   
   SDL_Event event;
   while(running){

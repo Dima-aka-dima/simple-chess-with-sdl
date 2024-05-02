@@ -60,96 +60,6 @@ typedef struct{
   SDL_Point spritePosition;
 } Piece;
 
-struct Window{
-  SDL_Window* sdlWindow;
-  SDL_Rect position;
-  uint32_t flags;
-  
-  Window(){
-    position = {10, 10, WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT};
-    flags = SDL_WINDOW_RESIZABLE;
-    sdlWindow = SDL_CreateWindow("Simple chess GUI", position.x, position.y, position.w, position.h, flags);
-  }
-  
-  void updateOnResize(){
-    SDL_GetWindowSize(this->sdlWindow, &this->position.w, &this->position.h);};
-  
-  /* TODO: bugfix, sometimes doesn't correctly resize after exiting fullscreen*/
-  void changeFullscreen(){
-    flags = SDL_GetWindowFlags(sdlWindow);
-    SDL_SetWindowFullscreen(sdlWindow, (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ?
-			    0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-  };
-};
-
-typedef struct{
-  std::vector<Piece> pieces;
-  SDL_Rect position;
-
-  void updateOnResize();
-} Board;
-
-std::vector<Piece> pieces;
-
-bool isAnyPieceAt(SDL_Point position){
-  for(auto& piece: pieces) if(piece.position == position) return true;
-  return false;
-}
-
-
-Piece getPieceAt(SDL_Point position){
-  for(auto& piece: pieces) if(piece.position == position) return piece;
-  return {};
-}
-
-void setPieceAt(Piece piece, SDL_Point position){
-  piece.position = position;
-  for(size_t i = 0; i < pieces.size(); i++)
-    if(pieces[i].position == position){
-      pieces[i] = piece; return;}
-
-  pieces.push_back(piece);
-}
-
-void deletePieceAt(SDL_Point position){
-  for(size_t i = 0; i < pieces.size(); i++)
-    if(pieces[i].position == position){
-      pieces.erase(pieces.begin() + i); break;}
-}
-
-
-typedef struct{
-  SDL_Point position = {0, 0};
-} Mouse;
-
-typedef struct{
-  bool any = false;
-  bool same = false;
-  Piece piece = {};
-} Selection;
-
-typedef struct{
-  bool any = false;
-  Piece piece = {};
-  SDL_Point position = {0, 0};
-} Pickup;
-
-typedef struct{
-  SDL_Rect position;
-  SDL_Rect textPosition;
-  const char* text;
-} Button;
-
-Button resetButton = {{}, {}, "Reset"};
-Button switchSideButton = {{}, {}, "Switch Side"};
-
-
-void switchSide(){
-  if(side == White) side = Black;
-  else side = White;}
-
-
-
 std::vector<Piece> initialPieces = {
   {Rook, White, {0, 0}, {4, 0}},
   {Rook, White, {7, 0}, {4, 0}},
@@ -190,6 +100,109 @@ std::vector<Piece> initialPieces = {
   {Pawn, Black, {6, 6}, {5, 1}},
   {Pawn, Black, {7, 6}, {5, 1}}
 };
+
+struct Window{
+  SDL_Window* sdlWindow;
+  SDL_Rect position;
+  uint32_t flags;
+  
+  Window(){
+    position = {10, 10, WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT};
+    flags = SDL_WINDOW_RESIZABLE;
+    sdlWindow = SDL_CreateWindow("Simple chess GUI", position.x, position.y, position.w, position.h, flags);
+  }
+  
+  void updateOnResize(){
+    SDL_GetWindowSize(this->sdlWindow, &this->position.w, &this->position.h);};
+  
+  /* TODO: bugfix, sometimes doesn't correctly resize after exiting fullscreen*/
+  void changeFullscreen(){
+    flags = SDL_GetWindowFlags(sdlWindow);
+    SDL_SetWindowFullscreen(sdlWindow, (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ?
+			    0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+  };
+};
+
+
+struct Board{
+  std::vector<Piece> pieces;
+  SDL_Rect position;
+  PieceColor side;
+  
+  Board(){
+    side = White;
+    pieces = initialPieces;
+  }
+  
+  void updateOnResize(Window* window){
+    position = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
+    int size = 0;
+    if(window->position.h > window->position.w) size = 0.9 * window->position.h;
+    else size = 0.9 * window->position.h;
+    position.h = position.w = size;
+  }
+
+  void reset(){pieces = initialPieces; side = White;}
+  
+  bool isAnyPieceAt(SDL_Point position){
+    for(auto& piece: pieces) if(piece.position == position) return true;
+    return false;
+  }
+
+
+  Piece getPieceAt(SDL_Point position){
+    for(auto& piece: pieces) if(piece.position == position) return piece;
+    return {};
+  }
+
+  void setPieceAt(Piece piece, SDL_Point position){
+    piece.position = position;
+    for(size_t i = 0; i < pieces.size(); i++)
+      if(pieces[i].position == position){
+	pieces[i] = piece; return;}
+    
+    pieces.push_back(piece);
+  }
+
+  void deletePieceAt(SDL_Point position){
+    for(size_t i = 0; i < pieces.size(); i++)
+      if(pieces[i].position == position){
+	pieces.erase(pieces.begin() + i); break;}
+  }
+};
+
+
+typedef struct{
+  SDL_Point position = {0, 0};
+} Mouse;
+
+typedef struct{
+  bool any = false;
+  bool same = false;
+  Piece piece = {};
+} Selection;
+
+typedef struct{
+  bool any = false;
+  Piece piece = {};
+  SDL_Point position = {0, 0};
+} Pickup;
+
+typedef struct{
+  SDL_Rect position;
+  SDL_Rect textPosition;
+  const char* text;
+} Button;
+
+Button resetButton = {{}, {}, "Reset"};
+Button switchSideButton = {{}, {}, "Switch Side"};
+
+
+void switchSide(){
+  if(side == White) side = Black;
+  else side = White;}
+
+
 
 
 #endif
