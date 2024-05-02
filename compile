@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ main.cpp -Wall -Wextra -lSDL2 -lSDL2_ttf -lSDL2_gfx -lSDL2_image -o main
