@@ -82,24 +82,11 @@ std::vector<SDL_Point> getBishopMoves(SDL_Point p){
   return moves;
 }
 
+
 std::vector<SDL_Point> getQueenMoves(SDL_Point& position){
   std::vector<SDL_Point> moves = getRookMoves(position);
   for(auto& move: getBishopMoves(position))
     moves.push_back(move);
-  return moves;
-}
-
-std::vector<SDL_Point> getKingMoves(SDL_Point& p){
-  std::vector<SDL_Point> moves = {};
-  
-  for(int dx = -1; dx <= 1; dx++)
-    for(int dy = -1; dy <= 1; dy++){
-      if((dx == 0) && (dy == 0)) continue;
-      SDL_Point to = p + (SDL_Point){dx, dy};
-      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-      if(!isAnyPieceAt(to)) moves.push_back(to);
-    }
-
   return moves;
 }
 
@@ -133,6 +120,24 @@ std::vector<SDL_Point> getPawnCaptureMoves(SDL_Point& p, PieceColor color){
     if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
     to = p + (SDL_Point){1, -1};
     if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+  }
+  return moves;
+}
+
+
+std::vector<SDL_Point> getPawnPossibleCaptureMoves(SDL_Point& p, PieceColor color){
+  std::vector<SDL_Point> moves;
+  SDL_Point to;
+  if(color == White){
+    to = p + (SDL_Point){1, 1};
+    moves.push_back(to);
+    to = p + (SDL_Point){-1, 1};
+    moves.push_back(to);
+  }else{
+    to = p + (SDL_Point){-1, -1};
+    moves.push_back(to);
+    to = p + (SDL_Point){1, -1};
+    moves.push_back(to);
   }
   return moves;
 }
@@ -227,23 +232,6 @@ std::vector<SDL_Point> getQueenCaptureMoves(SDL_Point& position, PieceColor colo
   return moves;
 }
 
-
-std::vector<SDL_Point> getKingCaptureMoves(SDL_Point& p, PieceColor color){
-  std::vector<SDL_Point> moves = {};
-  
-  for(int dx = -1; dx <= 1; dx++)
-    for(int dy = -1; dy <= 1; dy++){
-      if((dx == 0) && (dy == 0)) continue;
-      SDL_Point to = p + (SDL_Point){dx, dy};
-      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color))
-	moves.push_back(to);
-    }
-
-  return moves;
-}
-
-
 std::vector<SDL_Point> getKnightCaptureMoves(SDL_Point& p, PieceColor color){
   std::vector<SDL_Point> moves = {};
 
@@ -261,29 +249,95 @@ std::vector<SDL_Point> getKnightCaptureMoves(SDL_Point& p, PieceColor color){
   return moves;
 }
 
-
-std::vector<SDL_Point> getCaptureMoves(Piece& piece){
-  switch(piece.type){
-  case Pawn: return getPawnCaptureMoves(piece.position, piece.color);
-  case Rook: return getRookCaptureMoves(piece.position, piece.color);
-  case Knight: return getKnightCaptureMoves(piece.position, piece.color);
-  case Bishop: return getBishopCaptureMoves(piece.position, piece.color);
-  case King: return getKingCaptureMoves(piece.position, piece.color);
-  case Queen: return getQueenCaptureMoves(piece.position, piece.color);
-  }
-  return {};
-}
-
-std::vector<SDL_Point> getMoves(Piece& piece){
+std::vector<SDL_Point> getNonKingMoves(Piece piece){
   switch(piece.type){
   case Pawn: return getPawnMoves(piece.position, piece.color);
   case Rook: return getRookMoves(piece.position);
   case Knight: return getKnightMoves(piece.position);
   case Bishop: return getBishopMoves(piece.position);
-  case King: return getKingMoves(piece.position);
   case Queen: return getQueenMoves(piece.position);
+  default: return {};
+  }
+  return {};  
+}
+
+std::vector<SDL_Point> getNonKingCaptureMoves(Piece piece){
+  switch(piece.type){
+  case Pawn: return getPawnCaptureMoves(piece.position, piece.color);
+  case Rook: return getRookCaptureMoves(piece.position, piece.color);
+  case Knight: return getKnightCaptureMoves(piece.position, piece.color);
+  case Bishop: return getBishopCaptureMoves(piece.position, piece.color);
+  case Queen: return getQueenCaptureMoves(piece.position, piece.color);
+  default: return {};
   }
   return {};
+}
+
+
+bool isProtected(SDL_Point position){
+  for(auto& piece: pieces){
+    if(piece.color == turn) continue;
+
+    // TODO: handle King case
+    if(piece.type == King) continue;
+
+    
+    std::vector<SDL_Point> moves = getNonKingMoves(piece);
+    if(piece.type == Pawn)
+      moves = getPawnPossibleCaptureMoves(piece.position, piece.color);
+    
+    for(auto& move: moves)
+      if(move == position) return true;
+
+   
+    Piece invertedPiece = piece;
+    invertedPiece.color = turn;
+    moves = getNonKingCaptureMoves(invertedPiece);
+    for(auto& move: moves)
+      if(move == position) return true;
+  }
+
+  return false;
+}
+
+
+std::vector<SDL_Point> getKingMoves(SDL_Point& p){
+  std::vector<SDL_Point> moves = {};
+  
+  for(int dx = -1; dx <= 1; dx++)
+    for(int dy = -1; dy <= 1; dy++){
+      if((dx == 0) && (dy == 0)) continue;
+      SDL_Point to = p + (SDL_Point){dx, dy};
+      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
+      if(!isAnyPieceAt(to) && !isProtected(to)) moves.push_back(to);
+    }
+
+  return moves;
+}
+
+std::vector<SDL_Point> getKingCaptureMoves(SDL_Point& p, PieceColor color){
+  std::vector<SDL_Point> moves = {};
+  
+  for(int dx = -1; dx <= 1; dx++)
+    for(int dy = -1; dy <= 1; dy++){
+      if((dx == 0) && (dy == 0)) continue;
+      SDL_Point to = p + (SDL_Point){dx, dy};
+      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
+      if(isAnyPieceAt(to) && (getPieceAt(to).color != color) && !isProtected(to))
+	moves.push_back(to);
+    }
+
+  return moves;
+}
+
+std::vector<SDL_Point> getCaptureMoves(Piece piece){
+  if(piece.type == King) return getKingCaptureMoves(piece.position, piece.color);
+  else return getNonKingCaptureMoves(piece);  
+}
+
+std::vector<SDL_Point> getMoves(Piece& piece){
+  if(piece.type == King) return getKingMoves(piece.position);
+  else return getNonKingMoves(piece);  
 }
 
 #endif

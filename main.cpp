@@ -9,7 +9,7 @@
 #include "moves.hpp"
 
 
-bool running = true;
+bool running;
 
 SDL_Texture* texturePieces;
 SDL_Texture* textureTiles;
@@ -275,6 +275,7 @@ int main(){
 
   
   SDL_Event event;
+  running = true;
   while(running){
 
     handleInput(event);
