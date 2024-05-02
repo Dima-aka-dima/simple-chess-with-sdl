@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <vector>
+#include <functional>
 
 #define WINDOW_INITIAL_WIDTH 1200
 #define WINDOW_INITIAL_HEIGHT 800
@@ -60,6 +61,8 @@ typedef struct{
   SDL_Point spritePosition;
 } Piece;
 
+enum GameMode{Free, Game};
+
 struct Window{
   SDL_Window* sdlWindow;
   SDL_Rect position;
@@ -88,7 +91,9 @@ SDL_Renderer* renderer;
 
 
 std::vector<Piece> pieces;
-PieceColor side;
+PieceColor side = Black;
+PieceColor turn = side;
+GameMode gameMode = Free;
 
 namespace GUI{
 
@@ -118,7 +123,7 @@ typedef struct{
   SDL_Point position = {0, 0};
 } Pickup;
 
-typedef struct{
+struct Button{
   SDL_Rect position;
   SDL_Rect textPosition;
   const char* text;
@@ -129,14 +134,85 @@ typedef struct{
     renderTextSolid(renderer, font, text, {0, 0, 0, 255}, &textPosition);
   }
 
-}Button;
+  std::function<void(Button&)> __updateOnResize;
+  
+  void updateOnResize(){__updateOnResize(*this);};
+};
   
 }
 
 GUI::Board* board = new GUI::Board();
 
-GUI::Button resetButton = {{}, {}, "Reset"};
-GUI::Button switchSideButton = {{}, {}, "Switch Side"};
+
+void updateResetButtonOnResize(GUI::Button& button){
+  using namespace GUI;
+  
+  SDL_Rect rightSpace = {
+    board->position.x + board->position.w,
+    board->position.y,
+    window->position.w - board->position.x - board->position.w,
+    board->position.h
+  };
+  
+  button.position = {
+    rightSpace.x + (int)(0.05 * rightSpace.h),
+    rightSpace.y + (int)(0.0 * rightSpace.h),
+    (int) (0.5*rightSpace.h),
+    (int) (0.1*rightSpace.h)
+  };
+
+  int textWidth, textHeight;
+  TTF_SizeText(font, button.text, &textWidth, &textHeight);
+    
+  float alpha = 0.25;
+  int textWidthScaled = alpha * button.position.w;
+  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
+  
+  button.textPosition = {
+    button.position.x + (button.position.w - textWidthScaled)/2,
+    button.position.y + (button.position.h - textHeightScaled)/2,
+    textWidthScaled,
+    textHeightScaled,
+  };
+}
+
+
+void updateSwitchSideButtonOnResize(GUI::Button& button){
+  using namespace GUI;
+    
+  SDL_Rect rightSpace = {
+    board->position.x + board->position.w,
+    board->position.y,
+    window->position.w - board->position.x - board->position.w,
+    board->position.h
+  };
+    
+  button.position = {
+    rightSpace.x + (int)(0.05 * rightSpace.h),
+    rightSpace.y + (int)(0.15 * rightSpace.h),
+    (int) (0.5*rightSpace.h),
+    (int) (0.1*rightSpace.h)
+  };
+
+  int textWidth, textHeight;
+  TTF_SizeText(font, button.text, &textWidth, &textHeight);
+  
+  float alpha = 0.5;
+  int textWidthScaled = alpha * button.position.w;
+  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
+  
+  button.textPosition = {
+    button.position.x + (button.position.w - textWidthScaled)/2,
+    button.position.y + (button.position.h - textHeightScaled)/2,
+    textWidthScaled,
+    textHeightScaled,
+  };
+  
+}
+
+
+GUI::Button resetButton = {{}, {}, "Reset", updateResetButtonOnResize};
+GUI::Button switchSideButton = {{}, {}, "Switch Side", updateSwitchSideButtonOnResize};
   
 bool isAnyPieceAt(SDL_Point position)
 {

@@ -18,74 +18,6 @@ GUI::Selection selection;
 GUI::Pickup picked;
 Mouse mouse;
 
-// TODO: better button handling
-
-void updateResetButtonScreenPosition(){
-  using namespace GUI;
-  
-  SDL_Rect rightSpace = {
-    board->position.x + board->position.w,
-    board->position.y,
-    window->position.w - board->position.x - board->position.w,
-    board->position.h
-  };
-  
-  resetButton.position = {
-    rightSpace.x + (int)(0.05 * rightSpace.h),
-    rightSpace.y + (int)(0.0 * rightSpace.h),
-    (int) (0.5*rightSpace.h),
-    (int) (0.1*rightSpace.h)
-  };
-
-  int textWidth, textHeight;
-  TTF_SizeText(font, resetButton.text, &textWidth, &textHeight);
-    
-  float alpha = 0.25;
-  int textWidthScaled = alpha * resetButton.position.w;
-  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
-  
-  resetButton.textPosition = {
-    resetButton.position.x + (resetButton.position.w - textWidthScaled)/2,
-    resetButton.position.y + (resetButton.position.h - textHeightScaled)/2,
-    textWidthScaled,
-    textHeightScaled,
-  };
-}
-
-void updateSwitchSideButtonScreenPosition(){
-  using namespace GUI;
-    
-  SDL_Rect rightSpace = {
-    board->position.x + board->position.w,
-    board->position.y,
-    window->position.w - board->position.x - board->position.w,
-    board->position.h
-  };
-    
-  switchSideButton.position = {
-    rightSpace.x + (int)(0.05 * rightSpace.h),
-    rightSpace.y + (int)(0.15 * rightSpace.h),
-    (int) (0.5*rightSpace.h),
-    (int) (0.1*rightSpace.h)
-  };
-
-  int textWidth, textHeight;
-  TTF_SizeText(font, switchSideButton.text, &textWidth, &textHeight);
-  
-  float alpha = 0.5;
-  int textWidthScaled = alpha * switchSideButton.position.w;
-  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
-  
-  switchSideButton.textPosition = {
-    switchSideButton.position.x + (switchSideButton.position.w - textWidthScaled)/2,
-    switchSideButton.position.y + (switchSideButton.position.h - textHeightScaled)/2,
-    textWidthScaled,
-    textHeightScaled,
-  };
-  
-}
-
-
 SDL_Rect getTileScreenRect(SDL_Point tilePosition){
   using namespace GUI;
   
@@ -201,8 +133,8 @@ void handleInput(SDL_Event event){
   window->updateOnResize();
   board->updateOnResize();
 
-  updateResetButtonScreenPosition();
-  updateSwitchSideButtonScreenPosition();
+  resetButton.updateOnResize();
+  switchSideButton.updateOnResize();
   
   while(SDL_PollEvent(&event)){  
     switch(event.type){
@@ -327,6 +259,7 @@ int main(){
   font = TTF_OpenFont("./SpaceMono-Regular.ttf", 200);
 
   pieces = initialPieces;
+
   
   SDL_Event event;
   while(running){
