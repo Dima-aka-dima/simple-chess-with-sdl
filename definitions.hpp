@@ -91,16 +91,17 @@ SDL_Renderer* renderer;
 
 
 std::vector<Piece> pieces;
-PieceColor side = Black;
-PieceColor turn = side;
-GameMode gameMode = Free;
+PieceColor turn = White;
+GameMode gameMode = Game;
 
 namespace GUI{
 
+  
 struct Board{
   SDL_Rect position;
+  PieceColor side;
   
-  Board(){ }
+  Board(){ side = White; }
   
   void updateOnResize(){
     position = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
@@ -249,8 +250,12 @@ typedef struct{
 
 
 void switchSide(){
-  if(side == White) side = Black;
-  else side = White;}
+  if(board->side == White) board->side = Black;
+  else board->side = White;}
+
+void switchTurn(){
+  if(turn == White) turn = Black;
+  else turn = White;}
 
 bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
 
@@ -296,7 +301,7 @@ std::vector<Piece> initialPieces = {
   {Pawn, Black, {7, 6}, {5, 1}}
 };
 
-void reset(){pieces = initialPieces; side = White;}
+void reset(){pieces = initialPieces; board->side = White;}
 
 
 #endif

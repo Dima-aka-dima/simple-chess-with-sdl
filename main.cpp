@@ -22,7 +22,7 @@ SDL_Rect getTileScreenRect(SDL_Point tilePosition){
   using namespace GUI;
   
   int tileSize = board->position.w / 8;
-  if(side == White)
+  if(board->side == White)
     return {
       board->position.x + tilePosition.x*tileSize,
       board->position.y + (7 - tilePosition.y)*tileSize,
@@ -45,6 +45,50 @@ SDL_Point getTileIntersection(SDL_Point* point){
   return SDL_Point({-1, -1});
 }
 
+
+// Returns whether or not the move was made
+bool makeMove(Piece piece, SDL_Point position){
+  if(gameMode == Game){
+    std::vector<SDL_Point> moves = getMoves(piece);
+    std::vector<SDL_Point> captureMoves = getCaptureMoves(piece);
+
+    if(!isAnyPieceAt(position)){
+      for(auto& move: moves)
+	if(move == position){
+	  setPieceAt(piece, position);
+	  deletePieceAt(piece.position);
+	  switchTurn();
+	  return true;
+	}
+      return false;
+    }
+
+    if(getPieceAt(position).color == piece.color) return false;
+    
+    for(auto& move: captureMoves){
+      if(move == position){
+
+	setPieceAt(piece, position);
+	deletePieceAt(piece.position);
+	switchTurn();
+	return true;
+      }
+    }
+
+  return false;
+  
+  } else if(gameMode == Free){
+    if(!isAnyPieceAt(position) || (getPieceAt(position).color != piece.color)){
+      setPieceAt(piece, position);
+      deletePieceAt(piece.position);
+      return true;
+    }
+    return false;
+  }
+
+  return false;
+}
+   
 void updatePickupOnUp(){
   using namespace GUI;
   
@@ -53,32 +97,9 @@ void updatePickupOnUp(){
   
   if(!SDL_PointInRect(&mouse.position, &board->position)) return;
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
-
-  std::vector<SDL_Point> moves = getMoves(picked.piece);
-  std::vector<SDL_Point> captureMoves = getCaptureMoves(picked.piece);
-
-  if(!isAnyPieceAt(tilePosition)){
-    for(auto& move: moves)
-      if(move == tilePosition){
-	setPieceAt(picked.piece, tilePosition);
-	deletePieceAt(picked.piece.position);
-	// switchSide();
-      }
-    
-    return;
-  }
-
-  if(getPieceAt(tilePosition).color == picked.piece.color) return;
-    
-  for(auto& move: captureMoves){
-    if(move == tilePosition){
-
-      setPieceAt(picked.piece, tilePosition);
-      deletePieceAt(picked.piece.position);
-      // switchSide();
-      return;
-    }
-  }
+  
+  bool moveWasMade = makeMove(picked.piece, tilePosition);
+  if(moveWasMade && false) switchSide();
   
   // TODO: make selection properly
   // selection.same = false;
@@ -91,7 +112,7 @@ void updatePickupOnDown(){
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
   for(auto& piece: pieces)
-    if(tilePosition == piece.position){
+    if(tilePosition == piece.position && piece.color == turn){
       picked.any = true;
       picked.piece = piece;
       picked.position = mouse.position;
@@ -111,7 +132,7 @@ void updateSelectionOnDown(){
     selection.same = true;
 
   for(auto& piece: pieces)
-    if(tilePosition == piece.position){
+    if(tilePosition == piece.position && piece.color == turn){
       selection.any = true;
       selection.piece = piece;
     }  
