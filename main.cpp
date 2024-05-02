@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "definitions.hpp"
+#include "gui.hpp"
 #include "moves.hpp"
 
 
@@ -18,26 +19,19 @@ GUI::Selection selection;
 GUI::Pickup picked;
 Mouse mouse;
 
-SDL_Rect getTileScreenRect(SDL_Point tilePosition){
-  using namespace GUI;
-  
-  int tileSize = board->position.w / 8;
-  if(board->side == White)
-    return {
-      board->position.x + tilePosition.x*tileSize,
-      board->position.y + (7 - tilePosition.y)*tileSize,
-      tileSize, tileSize};
- else
-   return {
-     board->position.x + tilePosition.x*tileSize,
-     board->position.y + tilePosition.y*tileSize,
-     tileSize, tileSize};
-}
+Window* window = new Window();
+SDL_Renderer* renderer;
+
+
+
+GUI::Board* board = new GUI::Board();
+
 
 SDL_Point getTileIntersection(SDL_Point* point){
+  using namespace GUI;
   for(int i = 0; i < 8; i++)
     for(int j = 0; j < 8; j++){
-      SDL_Rect rect = getTileScreenRect({j, i});
+      SDL_Rect rect = board->getTileScreenRect({j, i});
       
       if(SDL_PointInRect(point, &rect)) return SDL_Point({j, i});
     }
@@ -45,6 +39,11 @@ SDL_Point getTileIntersection(SDL_Point* point){
   return SDL_Point({-1, -1});
 }
 
+
+void switchTurn(){
+  if(turn == White) turn = Black;
+  else turn = White;
+}
 
 // Returns whether or not the move was made
 bool makeMove(Piece piece, SDL_Point position){
@@ -99,7 +98,7 @@ void updatePickupOnUp(){
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
   
   bool moveWasMade = makeMove(picked.piece, tilePosition);
-  if(moveWasMade && false) switchSide();
+  if(moveWasMade && false) board->switchSide();
   
   // TODO: make selection properly
   // selection.same = false;
@@ -144,10 +143,10 @@ void updateSelectionOnUp(){
 
 void handleInput(SDL_Event event){
   window->updateOnResize();
-  board->updateOnResize();
+  board->updateOnResize(window);
 
-  resetButton.updateOnResize();
-  switchSideButton.updateOnResize();
+  resetButton.updateOnResize(window, board);
+  switchSideButton.updateOnResize(window, board);
   
   while(SDL_PollEvent(&event)){  
     switch(event.type){
@@ -160,10 +159,12 @@ void handleInput(SDL_Event event){
     case SDL_MOUSEBUTTONUP:
       updatePickupOnUp();
       updateSelectionOnUp();
-      if(SDL_PointInRect(&mouse.position, &resetButton.position))
+      if(SDL_PointInRect(&mouse.position, &resetButton.position)){
         reset();
+	board->reset();
+      }
       if(SDL_PointInRect(&mouse.position, &switchSideButton.position))
-	switchSide();
+	board->switchSide();
     
       break;
       
@@ -185,7 +186,7 @@ void renderTiles(){
 
   for(int i = 0; i < 8; i++)
     for(int j = 0; j < 8; j++) {
-      SDL_Rect tileDstRect = getTileScreenRect({j, i});
+      SDL_Rect tileDstRect = board->getTileScreenRect({j, i});
       
       SDL_Rect tileSrcRect = {0, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       if(!isWhite({j, i})) tileSrcRect.y += SPRITE_TILE_SIZE;
@@ -196,8 +197,9 @@ void renderTiles(){
   if(selection.any){
     SDL_Rect tileSrcRect = {SPRITE_TILE_SIZE, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};;
     if(!isWhite(selection.piece.position)) tileSrcRect.y += SPRITE_TILE_SIZE;
+
     
-    SDL_Rect tileDstRect = getTileScreenRect(selection.piece.position);
+    SDL_Rect tileDstRect = board->getTileScreenRect(selection.piece.position);
 
     SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
 
@@ -206,14 +208,14 @@ void renderTiles(){
     std::vector<SDL_Point> captureMoves = getCaptureMoves(selection.piece);
 
     for(auto& move: moves){
-      tileDstRect = getTileScreenRect({move.x, move.y});
+      tileDstRect = board->getTileScreenRect({move.x, move.y});
       tileSrcRect = {2*SPRITE_TILE_SIZE, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
     }
     
     for(auto& move: captureMoves){
-      tileDstRect = getTileScreenRect({move.x, move.y});
+      tileDstRect = board->getTileScreenRect({move.x, move.y});
       tileSrcRect = {2*SPRITE_TILE_SIZE, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
@@ -229,7 +231,7 @@ SDL_Rect getPieceSrcRect(Piece& piece){
     SPRITE_PIECE_SIZE, SPRITE_PIECE_SIZE};}
 
 SDL_Rect getPieceDstRect(Piece& piece){
-  return getTileScreenRect(piece.position);}
+  return board->getTileScreenRect(piece.position);}
 
 void renderPieces(){
     

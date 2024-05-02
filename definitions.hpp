@@ -4,10 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <vector>
-#include <functional>
 
-#define WINDOW_INITIAL_WIDTH 1200
-#define WINDOW_INITIAL_HEIGHT 800
 #define SPRITE_PIECE_SIZE 450
 #define SPRITE_TILE_SIZE 450
 
@@ -63,158 +60,12 @@ typedef struct{
 
 enum GameMode{Free, Game};
 
-struct Window{
-  SDL_Window* sdlWindow;
-  SDL_Rect position;
-  uint32_t flags;
-  
-  Window(){
-    position = {10, 10, WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT};
-    flags = SDL_WINDOW_RESIZABLE;
-    sdlWindow = SDL_CreateWindow("Simple chess GUI", position.x, position.y, position.w, position.h, flags);
-  }
-  
-  void updateOnResize(){
-    SDL_GetWindowSize(this->sdlWindow, &this->position.w, &this->position.h);};
-  
-  /* TODO: bugfix, sometimes doesn't correctly resize after exiting fullscreen*/
-  void changeFullscreen(){
-    flags = SDL_GetWindowFlags(sdlWindow);
-    SDL_SetWindowFullscreen(sdlWindow, (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ?
-			    0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-  };
-};
-
-
-Window* window = new Window();
-SDL_Renderer* renderer;
-
+PieceColor turn = White;
+GameMode gameMode = Free;
 
 std::vector<Piece> pieces;
-PieceColor turn = White;
-GameMode gameMode = Game;
-
-namespace GUI{
-
-  
-struct Board{
-  SDL_Rect position;
-  PieceColor side;
-  
-  Board(){ side = White; }
-  
-  void updateOnResize(){
-    position = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
-    int size = 0;
-    if(window->position.h > window->position.w) size = 0.9 * window->position.h;
-    else size = 0.9 * window->position.h;
-    position.h = position.w = size;
-  }
-};
-
-typedef struct{
-  bool any = false;
-  bool same = false;
-  Piece piece = {};
-} Selection;
-
-typedef struct{
-  bool any = false;
-  Piece piece = {};
-  SDL_Point position = {0, 0};
-} Pickup;
-
-struct Button{
-  SDL_Rect position;
-  SDL_Rect textPosition;
-  const char* text;
-
-  void render(SDL_Renderer* renderer){
-    SetRenderDrawColor(renderer, (SDL_Color){200, 200, 200, 200});    
-    SDL_RenderFillRect(renderer, &position);
-    renderTextSolid(renderer, font, text, {0, 0, 0, 255}, &textPosition);
-  }
-
-  std::function<void(Button&)> __updateOnResize;
-  
-  void updateOnResize(){__updateOnResize(*this);};
-};
-  
-}
-
-GUI::Board* board = new GUI::Board();
 
 
-void updateResetButtonOnResize(GUI::Button& button){
-  using namespace GUI;
-  
-  SDL_Rect rightSpace = {
-    board->position.x + board->position.w,
-    board->position.y,
-    window->position.w - board->position.x - board->position.w,
-    board->position.h
-  };
-  
-  button.position = {
-    rightSpace.x + (int)(0.05 * rightSpace.h),
-    rightSpace.y + (int)(0.0 * rightSpace.h),
-    (int) (0.5*rightSpace.h),
-    (int) (0.1*rightSpace.h)
-  };
-
-  int textWidth, textHeight;
-  TTF_SizeText(font, button.text, &textWidth, &textHeight);
-    
-  float alpha = 0.25;
-  int textWidthScaled = alpha * button.position.w;
-  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
-  
-  button.textPosition = {
-    button.position.x + (button.position.w - textWidthScaled)/2,
-    button.position.y + (button.position.h - textHeightScaled)/2,
-    textWidthScaled,
-    textHeightScaled,
-  };
-}
-
-
-void updateSwitchSideButtonOnResize(GUI::Button& button){
-  using namespace GUI;
-    
-  SDL_Rect rightSpace = {
-    board->position.x + board->position.w,
-    board->position.y,
-    window->position.w - board->position.x - board->position.w,
-    board->position.h
-  };
-    
-  button.position = {
-    rightSpace.x + (int)(0.05 * rightSpace.h),
-    rightSpace.y + (int)(0.15 * rightSpace.h),
-    (int) (0.5*rightSpace.h),
-    (int) (0.1*rightSpace.h)
-  };
-
-  int textWidth, textHeight;
-  TTF_SizeText(font, button.text, &textWidth, &textHeight);
-  
-  float alpha = 0.5;
-  int textWidthScaled = alpha * button.position.w;
-  int textHeightScaled = textWidthScaled * ((float)textHeight / (float)textWidth);
-  
-  button.textPosition = {
-    button.position.x + (button.position.w - textWidthScaled)/2,
-    button.position.y + (button.position.h - textHeightScaled)/2,
-    textWidthScaled,
-    textHeightScaled,
-  };
-  
-}
-
-
-GUI::Button resetButton = {{}, {}, "Reset", updateResetButtonOnResize};
-GUI::Button switchSideButton = {{}, {}, "Switch Side", updateSwitchSideButtonOnResize};
-  
 bool isAnyPieceAt(SDL_Point position)
 {
   for(auto& piece: pieces) if(piece.position == position) return true;
@@ -248,14 +99,6 @@ typedef struct{
   SDL_Point position = {0, 0};
 } Mouse;
 
-
-void switchSide(){
-  if(board->side == White) board->side = Black;
-  else board->side = White;}
-
-void switchTurn(){
-  if(turn == White) turn = Black;
-  else turn = White;}
 
 bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
 
@@ -301,7 +144,7 @@ std::vector<Piece> initialPieces = {
   {Pawn, Black, {7, 6}, {5, 1}}
 };
 
-void reset(){pieces = initialPieces; board->side = White;}
+void reset(){pieces = initialPieces;}
 
 
 #endif
