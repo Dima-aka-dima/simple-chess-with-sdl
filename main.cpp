@@ -1,3 +1,5 @@
+/* TODO: Separate Chess as a game (like an engine) and GUI / interactions with GUI*/ 
+
 #include <iostream>
 
 #include <SDL2/SDL.h>
@@ -7,13 +9,13 @@
 
 Window* window = new Window();
 SDL_Renderer* renderer;
-TTF_Font* font;
 Board* board = new Board();
 
 #include "moves.hpp"
 
 bool running = true;
 
+TTF_Font* font;
 SDL_Texture* texturePieces;
 SDL_Texture* textureTiles;
 

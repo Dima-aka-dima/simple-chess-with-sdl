@@ -123,7 +123,8 @@ struct Window{
   };
 };
 
-
+/* This unites board as a renderable object and as a part of chess API */
+/* This is not good */
 struct Board{
   std::vector<Piece> pieces;
   SDL_Rect position;
@@ -144,27 +145,29 @@ struct Board{
 
   void reset(){pieces = initialPieces; side = White;}
   
-  bool isAnyPieceAt(SDL_Point position){
+  bool isAnyPieceAt(SDL_Point position)
+  {
     for(auto& piece: pieces) if(piece.position == position) return true;
     return false;
   }
 
 
-  Piece getPieceAt(SDL_Point position){
+  Piece getPieceAt(SDL_Point position)
+  {
     for(auto& piece: pieces) if(piece.position == position) return piece;
     return {};
   }
 
-  void setPieceAt(Piece piece, SDL_Point position){
+  void setPieceAt(Piece piece, SDL_Point position)
+  {
     piece.position = position;
     for(size_t i = 0; i < pieces.size(); i++)
-      if(pieces[i].position == position){
-	pieces[i] = piece; return;}
-    
+      if(pieces[i].position == position){pieces[i] = piece; return;}
     pieces.push_back(piece);
   }
 
-  void deletePieceAt(SDL_Point position){
+  void deletePieceAt(SDL_Point position)
+  {
     for(size_t i = 0; i < pieces.size(); i++)
       if(pieces[i].position == position){
 	pieces.erase(pieces.begin() + i); break;}
