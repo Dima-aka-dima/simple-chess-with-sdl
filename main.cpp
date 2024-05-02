@@ -112,7 +112,7 @@ void updatePickupOnDown(){
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
   for(auto& piece: pieces)
-    if(tilePosition == piece.position && piece.color == turn){
+    if(tilePosition == piece.position && (gameMode == Free || piece.color == turn)){
       picked.any = true;
       picked.piece = piece;
       picked.position = mouse.position;
@@ -122,31 +122,23 @@ void updatePickupOnDown(){
 // TODO: Proper selection!
 void updateSelectionOnDown(){
   using namespace GUI;
-  
-  bool was = selection.any;
+
   selection.any = false;
   if(!SDL_PointInRect(&mouse.position, &board->position)) return;
-
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
-  if(was && selection.piece.position == tilePosition)
-    selection.same = true;
 
   for(auto& piece: pieces)
-    if(tilePosition == piece.position && piece.color == turn){
+    if(tilePosition == piece.position && (gameMode == Free || piece.color == turn)){
       selection.any = true;
       selection.piece = piece;
-    }  
+    } 
 }
 
 void updateSelectionOnUp(){
   using namespace GUI;
 
   selection.any = false;
-  if(!selection.any) return;
-  if(selection.same){
-    selection.any = false;
-    selection.same = false;
-  }
+  
 }
 
 
