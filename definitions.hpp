@@ -46,6 +46,8 @@ void renderTextSolid(SDL_Renderer* renderer, TTF_Font* font, const char* text, S
   SDL_DestroyTexture(textTexture);
 }
 
+TTF_Font* font;
+
 
 enum PieceType{Rook, Knight, Bishop, King, Queen, Pawn};
 
@@ -79,17 +81,23 @@ struct Window{
 			    0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
   };
 };
+
+
+Window* window = new Window();
+SDL_Renderer* renderer;
+
+
 std::vector<Piece> pieces;
 PieceColor side;
 
-/* This unites board as a renderable object and as a part of chess API */
-/* This is not good */
+namespace GUI{
+
 struct Board{
   SDL_Rect position;
   
   Board(){ }
   
-  void updateOnResize(Window* window){
+  void updateOnResize(){
     position = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
     int size = 0;
     if(window->position.h > window->position.w) size = 0.9 * window->position.h;
@@ -98,6 +106,37 @@ struct Board{
   }
 };
 
+typedef struct{
+  bool any = false;
+  bool same = false;
+  Piece piece = {};
+} Selection;
+
+typedef struct{
+  bool any = false;
+  Piece piece = {};
+  SDL_Point position = {0, 0};
+} Pickup;
+
+typedef struct{
+  SDL_Rect position;
+  SDL_Rect textPosition;
+  const char* text;
+
+  void render(SDL_Renderer* renderer){
+    SetRenderDrawColor(renderer, (SDL_Color){200, 200, 200, 200});    
+    SDL_RenderFillRect(renderer, &position);
+    renderTextSolid(renderer, font, text, {0, 0, 0, 255}, &textPosition);
+  }
+
+}Button;
+  
+}
+
+GUI::Board* board = new GUI::Board();
+
+GUI::Button resetButton = {{}, {}, "Reset"};
+GUI::Button switchSideButton = {{}, {}, "Switch Side"};
   
 bool isAnyPieceAt(SDL_Point position)
 {
@@ -132,31 +171,12 @@ typedef struct{
   SDL_Point position = {0, 0};
 } Mouse;
 
-typedef struct{
-  bool any = false;
-  bool same = false;
-  Piece piece = {};
-} Selection;
-
-typedef struct{
-  bool any = false;
-  Piece piece = {};
-  SDL_Point position = {0, 0};
-} Pickup;
-
-typedef struct{
-  SDL_Rect position;
-  SDL_Rect textPosition;
-  const char* text;
-} Button;
-
-Button resetButton = {{}, {}, "Reset"};
-Button switchSideButton = {{}, {}, "Switch Side"};
-
 
 void switchSide(){
   if(side == White) side = Black;
   else side = White;}
+
+bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
 
 
 std::vector<Piece> initialPieces = {

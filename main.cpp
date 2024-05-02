@@ -8,24 +8,21 @@
 #include "definitions.hpp"
 #include "moves.hpp"
 
-Window* window = new Window();
-SDL_Renderer* renderer;
-Board* board = new Board();
-
 
 bool running = true;
 
-TTF_Font* font;
 SDL_Texture* texturePieces;
 SDL_Texture* textureTiles;
 
-Selection selection;
+GUI::Selection selection;
+GUI::Pickup picked;
 Mouse mouse;
-Pickup picked;
 
 // TODO: better button handling
-void updateResetButtonScreenPosition(){
 
+void updateResetButtonScreenPosition(){
+  using namespace GUI;
+  
   SDL_Rect rightSpace = {
     board->position.x + board->position.w,
     board->position.y,
@@ -56,7 +53,8 @@ void updateResetButtonScreenPosition(){
 }
 
 void updateSwitchSideButtonScreenPosition(){
-  
+  using namespace GUI;
+    
   SDL_Rect rightSpace = {
     board->position.x + board->position.w,
     board->position.y,
@@ -89,6 +87,8 @@ void updateSwitchSideButtonScreenPosition(){
 
 
 SDL_Rect getTileScreenRect(SDL_Point tilePosition){
+  using namespace GUI;
+  
   int tileSize = board->position.w / 8;
   if(side == White)
     return {
@@ -114,6 +114,8 @@ SDL_Point getTileIntersection(SDL_Point* point){
 }
 
 void updatePickupOnUp(){
+  using namespace GUI;
+  
   if(!picked.any) return;
   picked.any = false;
   
@@ -151,6 +153,8 @@ void updatePickupOnUp(){
 }
 
 void updatePickupOnDown(){
+  using namespace GUI;
+  
   if(!SDL_PointInRect(&mouse.position, &board->position)) return;
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
@@ -164,6 +168,8 @@ void updatePickupOnDown(){
 
 // TODO: Proper selection!
 void updateSelectionOnDown(){
+  using namespace GUI;
+  
   bool was = selection.any;
   selection.any = false;
   if(!SDL_PointInRect(&mouse.position, &board->position)) return;
@@ -180,6 +186,8 @@ void updateSelectionOnDown(){
 }
 
 void updateSelectionOnUp(){
+  using namespace GUI;
+
   selection.any = false;
   if(!selection.any) return;
   if(selection.same){
@@ -191,7 +199,7 @@ void updateSelectionOnUp(){
 
 void handleInput(SDL_Event event){
   window->updateOnResize();
-  board->updateOnResize(window);
+  board->updateOnResize();
 
   updateResetButtonScreenPosition();
   updateSwitchSideButtonScreenPosition();
@@ -226,17 +234,6 @@ void handleInput(SDL_Event event){
       } break;
     }
   }
-}
-
-bool isWhite(SDL_Point tile){return ((tile.x + tile.y) % 2 == 0);}
-
-void renderButton(Button& button){
-  SetRenderDrawColor(renderer, (SDL_Color){200, 200, 200, 200});
-
-  SDL_RenderFillRect(renderer, &button.position);
-  
-  renderTextSolid(renderer, font, button.text, {0, 0, 0, 255}, &button.textPosition);
-
 }
 
 void renderTiles(){
@@ -341,8 +338,8 @@ int main(){
 
     renderTiles();
     renderPieces();
-    renderButton(resetButton);
-    renderButton(switchSideButton);
+    resetButton.render(renderer);
+    switchSideButton.render(renderer);
     SDL_RenderPresent(renderer);
   }
 }
