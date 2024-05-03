@@ -42,7 +42,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
     std::vector<SDL_Point> moves = board->getMoves(piece);
     std::vector<SDL_Point> captureMoves = board->getCaptureMoves(piece);
 
-    if(!board->isAnyPieceAt(position)){
+    if(!board->any(position)){
       for(auto& move: moves)
 	if(move == position){
 	  board->setPieceAt(piece, position);
@@ -53,7 +53,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
       return false;
     }
 
-    if(board->getPieceAt(position).color == piece.color) return false;
+    if((*board)[position].color == piece.color) return false;
     
     for(auto& move: captureMoves){
       if(move == position){
@@ -68,7 +68,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
   return false;
   
   } else if(gameMode == Free){
-    if(!board->isAnyPieceAt(position) || (board->getPieceAt(position).color != piece.color)){
+    if(!board->any(position) || ((*board)[position].color != piece.color)){
       board->setPieceAt(piece, position);
       board->deletePieceAt(piece.position);
       return true;
@@ -94,8 +94,8 @@ void updatePickupOnDown(){
   if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
   SDL_Point tile = getTileIntersection(&mouse.position);
   
-  if(board->isAnyPieceAt(tile)){
-    Chess::Piece piece = board->getPieceAt(tile);
+  if(board->any(tile)){
+    Chess::Piece piece = (*board)[tile];
     if(gameMode == Free || piece.color == board->turn){
       picked.any = true;
       picked.piece = piece;
@@ -111,8 +111,8 @@ void updateSelectionOnDown(){
   if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
   SDL_Point tile = getTileIntersection(&mouse.position);
 
-  if(board->isAnyPieceAt(tile)){
-    Chess::Piece piece = board->getPieceAt(tile);
+  if(board->any(tile)){
+    Chess::Piece piece = (*board)[tile];
     if(gameMode == Free || piece.color == board->turn){
       selection.any = true;
       selection.piece = piece;

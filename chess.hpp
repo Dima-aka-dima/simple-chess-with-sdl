@@ -87,17 +87,15 @@ struct Board{
   
   void reset(){pieces = initialPieces; turn = White;}
 
-  bool isAnyPieceAt(SDL_Point position)
+  bool any(SDL_Point position)
   {
     for(auto& piece: pieces) if(piece.position == position) return true;
     return false;
   }
 
-
-  Piece getPieceAt(SDL_Point position)
-  {
+  Piece operator[](SDL_Point position){
     for(auto& piece: pieces) if(piece.position == position) return piece;
-    return {};
+    return {};    
   }
 
   void setPieceAt(Piece piece, SDL_Point position)
@@ -121,14 +119,14 @@ struct Board{
     std::vector<SDL_Point> moves = {};
     if(color == White){
       if(p.y == 7) return {};
-      if(!isAnyPieceAt({p.x, p.y + 1})) moves.push_back({p.x, p.y + 1});
-      if((p.y == 1) && !isAnyPieceAt({p.x, 2}) && !isAnyPieceAt({p.x, 3}))
+      if(!any({p.x, p.y + 1})) moves.push_back({p.x, p.y + 1});
+      if((p.y == 1) && !any({p.x, 2}) && !any({p.x, 3}))
 	moves.push_back({p.x, 3});
     }
     else{
       if(p.y == 0) return {};
-      if(!isAnyPieceAt({p.x, p.y - 1})) moves.push_back({p.x, p.y - 1});
-      if((p.y == 6) && !isAnyPieceAt({p.x, 5}) && !isAnyPieceAt({p.x, 4}))
+      if(!any({p.x, p.y - 1})) moves.push_back({p.x, p.y - 1});
+      if((p.y == 6) && !any({p.x, 5}) && !any({p.x, 4}))
 	moves.push_back({p.x, 4});
     
     }
@@ -139,22 +137,22 @@ struct Board{
     std::vector<SDL_Point> moves = {};
 
     for(int x = p.x + 1; x < 8; x++){
-      if(isAnyPieceAt({x, p.y})) break;
+      if(any({x, p.y})) break;
       moves.push_back({x, p.y});
     }
   
     for(int x = p.x - 1; x >= 0; x--){
-      if(isAnyPieceAt({x, p.y})) break;
+      if(any({x, p.y})) break;
       moves.push_back({x, p.y});
     }
 
     for(int y = p.y + 1; y < 8; y++){
-      if(isAnyPieceAt({p.x, y})) break;
+      if(any({p.x, y})) break;
       moves.push_back({p.x, y});
     }
   
     for(int y = p.y - 1; y >= 0; y--){
-      if(isAnyPieceAt({p.x, y})) break;
+      if(any({p.x, y})) break;
       moves.push_back({p.x, y});
     }
   
@@ -167,28 +165,28 @@ struct Board{
     for(int d = 1; ;d++){
       int x = p.x + d, y = p.y + d;
       if(x == 8 || y == 8) break;
-      if(isAnyPieceAt({x, y})) break;
+      if(any({x, y})) break;
       moves.push_back({x, y});
     }
 
     for(int d = 1; ;d++){
       int x = p.x + d, y = p.y - d;
       if(x == 8 || y == -1) break;
-      if(isAnyPieceAt({x, y})) break;
+      if(any({x, y})) break;
       moves.push_back({x, y});
     }
 
     for(int d = 1; ;d++){
       int x = p.x - d, y = p.y + d;
       if(x == -1 || y == 8) break;
-      if(isAnyPieceAt({x, y})) break;
+      if(any({x, y})) break;
       moves.push_back({x, y});
     }
 
     for(int d = 1; ;d++){
       int x = p.x - d, y = p.y - d;
       if(x == -1 || y == -1) break;
-      if(isAnyPieceAt({x, y})) break;
+      if(any({x, y})) break;
       moves.push_back({x, y});
     }
 
@@ -214,7 +212,7 @@ struct Board{
       SDL_Point to = p + d;
       if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
 
-      if(!isAnyPieceAt(to)) moves.push_back(to);
+      if(!any(to)) moves.push_back(to);
     }
   
     return moves;
@@ -225,14 +223,14 @@ struct Board{
     SDL_Point to;
     if(color == White){
       to = p + (SDL_Point){1, 1};
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
       to = p + (SDL_Point){-1, 1};
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
     }else{
       to = p + (SDL_Point){-1, -1};
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
       to = p + (SDL_Point){1, -1};
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
     }
     return moves;
   }
@@ -260,29 +258,29 @@ struct Board{
     std::vector<SDL_Point> moves = {};
 
     for(int x = p.x + 1; x < 8; x++)
-      if(isAnyPieceAt({x, p.y})){
-	if(getPieceAt({x, p.y}).color != color)
+      if(any({x, p.y})){
+	if((*this)[{x, p.y}].color != color)
 	  moves.push_back({x, p.y});
 	break;
       }
   
     for(int x = p.x - 1; x >= 0; x--)
-      if(isAnyPieceAt({x, p.y})){
-	if(getPieceAt({x, p.y}).color != color)
+      if(any({x, p.y})){
+	if((*this)[{x, p.y}].color != color)
 	  moves.push_back({x, p.y});
 	break;
       }
   
     for(int y = p.y + 1; y < 8; y++)
-      if(isAnyPieceAt({p.x, y})){
-	if(getPieceAt({p.x, y}).color != color)
+      if(any({p.x, y})){
+	if((*this)[{p.x, y}].color != color)
 	  moves.push_back({p.x, y});
 	break;
       }
     
     for(int y = p.y - 1; y >= 0; y--)
-      if(isAnyPieceAt({p.x, y})){
-	if(getPieceAt({p.x, y}).color != color)
+      if(any({p.x, y})){
+	if((*this)[{p.x, y}].color != color)
 	  moves.push_back({p.x, y});
 	break;
       }
@@ -297,8 +295,8 @@ struct Board{
     for(int d = 1; ;d++){
       SDL_Point to = p + (SDL_Point){d, d};
       if(to.x == 8 || to.y == 8) break;
-      if(isAnyPieceAt(to)){
-	if(getPieceAt(to).color != color)
+      if(any(to)){
+	if((*this)[to].color != color)
 	  moves.push_back(to);
 	break;
       }
@@ -307,8 +305,8 @@ struct Board{
     for(int d = 1; ;d++){
       SDL_Point to = p + (SDL_Point){d, -d};
       if(to.x == 8 || to.y == -1) break;
-      if(isAnyPieceAt(to)){
-	if(getPieceAt(to).color != color)
+      if(any(to)){
+	if((*this)[to].color != color)
 	  moves.push_back(to);
 	break;
       }
@@ -317,8 +315,8 @@ struct Board{
     for(int d = 1; ;d++){
       SDL_Point to = p + (SDL_Point){-d, d};
       if(to.x == -1 || to.y == 8) break;
-      if(isAnyPieceAt(to)){
-	if(getPieceAt(to).color != color)
+      if(any(to)){
+	if((*this)[to].color != color)
 	  moves.push_back(to);
 	break;
       }
@@ -327,8 +325,8 @@ struct Board{
     for(int d = 1; ;d++){
       SDL_Point to = p + (SDL_Point){-d, -d};
       if(to.x == -1 || to.y == -1) break;
-      if(isAnyPieceAt(to)){
-	if(getPieceAt(to).color != color)
+      if(any(to)){
+	if((*this)[to].color != color)
 	  moves.push_back(to);
 	break;
       }
@@ -356,7 +354,7 @@ struct Board{
       SDL_Point to = p + d;
       if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
 
-      if(isAnyPieceAt(to) && (getPieceAt(to).color != color)) moves.push_back(to);
+      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
     }
   
     return moves;
@@ -422,7 +420,7 @@ struct Board{
 	if((dx == 0) && (dy == 0)) continue;
 	SDL_Point to = p + (SDL_Point){dx, dy};
 	if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-	if(!isAnyPieceAt(to) && !isProtected(to)) moves.push_back(to);
+	if(!any(to) && !isProtected(to)) moves.push_back(to);
       }
 
     return moves;
@@ -436,7 +434,7 @@ struct Board{
 	if((dx == 0) && (dy == 0)) continue;
 	SDL_Point to = p + (SDL_Point){dx, dy};
 	if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-	if(isAnyPieceAt(to) && (getPieceAt(to).color != color) && !isProtected(to))
+	if(any(to) && ((*this)[to].color != color) && !isProtected(to))
 	  moves.push_back(to);
       }
 
