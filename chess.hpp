@@ -3,12 +3,17 @@
 
 namespace Chess{
   
-enum PieceType{Rook, Knight, Bishop, King, Queen, Pawn};
+enum PieceName{Rook, Knight, Bishop, King, Queen, Pawn};
 
 enum PieceColor{Black, White};
 
+typedef struct {
+  PieceName name;
+  PieceColor color;
+} PieceType;
+  
 typedef struct{
-  PieceType type;
+  PieceName name;
   PieceColor color;
   SDL_Point position;
   SDL_Point spritePosition;
@@ -59,10 +64,9 @@ std::vector<Piece> initialPieces = {
   {Pawn, Black, {7, 6}, {5, 1}}
 };
 
-
 struct Board{
   std::vector<Piece> pieces = initialPieces;
-  Piece board[8][8];
+  PieceType board[8][8];
   PieceColor turn = White;
   
   void switchTurn(){
@@ -347,7 +351,7 @@ struct Board{
   }
 
   std::vector<SDL_Point> getNonKingMoves(Piece piece){
-    switch(piece.type){
+    switch(piece.name){
     case Pawn: return getPawnMoves(piece.position, piece.color);
     case Rook: return getRookMoves(piece.position);
     case Knight: return getKnightMoves(piece.position);
@@ -359,7 +363,7 @@ struct Board{
   }
 
   std::vector<SDL_Point> getNonKingCaptureMoves(Piece piece){
-    switch(piece.type){
+    switch(piece.name){
     case Pawn: return getPawnCaptureMoves(piece.position, piece.color);
     case Rook: return getRookCaptureMoves(piece.position, piece.color);
     case Knight: return getKnightCaptureMoves(piece.position, piece.color);
@@ -376,11 +380,11 @@ struct Board{
       if(piece.color == turn) continue;
 
       // TODO: handle King case
-      if(piece.type == King) continue;
+      if(piece.name == King) continue;
 
     
       std::vector<SDL_Point> moves = getNonKingMoves(piece);
-      if(piece.type == Pawn)
+      if(piece.name == Pawn)
 	moves = getPawnPossibleCaptureMoves(piece.position, piece.color);
     
       for(auto& move: moves)
@@ -428,12 +432,12 @@ struct Board{
   }
 
   std::vector<SDL_Point> getCaptureMoves(Piece piece){
-    if(piece.type == King) return getKingCaptureMoves(piece.position, piece.color);
+    if(piece.name == King) return getKingCaptureMoves(piece.position, piece.color);
     else return getNonKingCaptureMoves(piece);  
   }
 
   std::vector<SDL_Point> getMoves(Piece& piece){
-    if(piece.type == King) return getKingMoves(piece.position);
+    if(piece.name == King) return getKingMoves(piece.position);
     else return getNonKingMoves(piece);  
   }
 
