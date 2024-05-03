@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "definitions.hpp"
+#include "chess.hpp"
 
 struct Window{
   SDL_Window* sdlWindow;
@@ -36,10 +37,8 @@ namespace GUI{
   
 struct Board{
   SDL_Rect position;
-  PieceColor side;
-  
-  Board(){ side = White; }
-  
+  Chess::PieceColor side = Chess::White;
+    
   void updateOnResize(Window* window){
     position = {(int) (0.05*window->position.h), (int) (0.05*window->position.h), 0, 0};
     int size = 0;
@@ -51,7 +50,7 @@ struct Board{
   SDL_Rect getTileScreenRect(SDL_Point position){
   
     int size = this->position.w / 8;
-    if(side == White)
+    if(side == Chess::White)
       return {
 	this->position.x + position.x*size,
         this->position.y + (7 - position.y)*size,
@@ -63,23 +62,23 @@ struct Board{
 	size, size};
   }
 
-  void reset(){side = White;};
+  void reset(){ side = Chess::White; };
   
   void switchSide(){
-    if(side == White) side = Black;
-    else side = White;}
+    if(side == Chess::White) side = Chess::Black;
+    else side = Chess::White;}
 
 };
 
 typedef struct{
   bool any = false;
   bool same = false;
-  Piece piece = {};
+  Chess::Piece piece = {};
 } Selection;
 
 typedef struct{
   bool any = false;
-  Piece piece = {};
+  Chess::Piece piece = {};
   SDL_Point position = {0, 0};
 } Pickup;
 
@@ -171,8 +170,6 @@ void updateSwitchSideButtonOnResize(GUI::Button& button, Window* window, GUI::Bo
 
 GUI::Button resetButton = {{}, {}, "Reset", updateResetButtonOnResize};
 GUI::Button switchSideButton = {{}, {}, "Switch Side", updateSwitchSideButtonOnResize};
-
-
 
 
 #endif

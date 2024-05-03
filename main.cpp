@@ -7,8 +7,9 @@
 
 #include "definitions.hpp"
 #include "gui.hpp"
-#include "moves.hpp"
+#include "chess.hpp"
 
+using namespace Chess;
 
 bool running;
 
@@ -22,16 +23,16 @@ Mouse mouse;
 Window* window = new Window();
 SDL_Renderer* renderer;
 
+GameMode gameMode = Free;
 
 
-GUI::Board* board = new GUI::Board();
-
+GUI::Board* boardElement = new GUI::Board();
+Chess::Board* board = new Chess::Board();
 
 SDL_Point getTileIntersection(SDL_Point* point){
-  using namespace GUI;
   for(int i = 0; i < 8; i++)
     for(int j = 0; j < 8; j++){
-      SDL_Rect rect = board->getTileScreenRect({j, i});
+      SDL_Rect rect = boardElement->getTileScreenRect({j, i});
       
       if(SDL_PointInRect(point, &rect)) return SDL_Point({j, i});
     }
@@ -40,36 +41,31 @@ SDL_Point getTileIntersection(SDL_Point* point){
 }
 
 
-void switchTurn(){
-  if(turn == White) turn = Black;
-  else turn = White;
-}
-
 // Returns whether or not the move was made
 bool makeMove(Piece piece, SDL_Point position){
   if(gameMode == Game){
-    std::vector<SDL_Point> moves = getMoves(piece);
-    std::vector<SDL_Point> captureMoves = getCaptureMoves(piece);
+    std::vector<SDL_Point> moves = board->getMoves(piece);
+    std::vector<SDL_Point> captureMoves = board->getCaptureMoves(piece);
 
-    if(!isAnyPieceAt(position)){
+    if(!board->isAnyPieceAt(position)){
       for(auto& move: moves)
 	if(move == position){
-	  setPieceAt(piece, position);
-	  deletePieceAt(piece.position);
-	  switchTurn();
+	  board->setPieceAt(piece, position);
+	  board->deletePieceAt(piece.position);
+	  board->switchTurn();
 	  return true;
 	}
       return false;
     }
 
-    if(getPieceAt(position).color == piece.color) return false;
+    if(board->getPieceAt(position).color == piece.color) return false;
     
     for(auto& move: captureMoves){
       if(move == position){
 
-	setPieceAt(piece, position);
-	deletePieceAt(piece.position);
-	switchTurn();
+	board->setPieceAt(piece, position);
+	board->deletePieceAt(piece.position);
+	board->switchTurn();
 	return true;
       }
     }
@@ -77,9 +73,9 @@ bool makeMove(Piece piece, SDL_Point position){
   return false;
   
   } else if(gameMode == Free){
-    if(!isAnyPieceAt(position) || (getPieceAt(position).color != piece.color)){
-      setPieceAt(piece, position);
-      deletePieceAt(piece.position);
+    if(!board->isAnyPieceAt(position) || (board->getPieceAt(position).color != piece.color)){
+      board->setPieceAt(piece, position);
+      board->deletePieceAt(piece.position);
       return true;
     }
     return false;
@@ -94,11 +90,11 @@ void updatePickupOnUp(){
   if(!picked.any) return;
   picked.any = false;
   
-  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
+  if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
   
   bool moveWasMade = makeMove(picked.piece, tilePosition);
-  if(moveWasMade && false) board->switchSide();
+  if(moveWasMade && false) boardElement->switchSide();
   
   // TODO: make selection properly
   // selection.same = false;
@@ -107,11 +103,11 @@ void updatePickupOnUp(){
 void updatePickupOnDown(){
   using namespace GUI;
   
-  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
+  if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
 
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
-  for(auto& piece: pieces)
-    if(tilePosition == piece.position && (gameMode == Free || piece.color == turn)){
+  for(auto& piece: board->pieces)
+    if(tilePosition == piece.position && (gameMode == Free || piece.color == board->turn)){
       picked.any = true;
       picked.piece = piece;
       picked.position = mouse.position;
@@ -123,11 +119,11 @@ void updateSelectionOnDown(){
   using namespace GUI;
 
   selection.any = false;
-  if(!SDL_PointInRect(&mouse.position, &board->position)) return;
+  if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
   SDL_Point tilePosition = getTileIntersection(&mouse.position);
 
-  for(auto& piece: pieces)
-    if(tilePosition == piece.position && (gameMode == Free || piece.color == turn)){
+  for(auto& piece: board->pieces)
+    if(tilePosition == piece.position && (gameMode == Free || piece.color == board->turn)){
       selection.any = true;
       selection.piece = piece;
     } 
@@ -143,10 +139,10 @@ void updateSelectionOnUp(){
 
 void handleInput(SDL_Event event){
   window->updateOnResize();
-  board->updateOnResize(window);
+  boardElement->updateOnResize(window);
 
-  resetButton.updateOnResize(window, board);
-  switchSideButton.updateOnResize(window, board);
+  resetButton.updateOnResize(window, boardElement);
+  switchSideButton.updateOnResize(window, boardElement);
   
   while(SDL_PollEvent(&event)){  
     switch(event.type){
@@ -160,11 +156,11 @@ void handleInput(SDL_Event event){
       updatePickupOnUp();
       updateSelectionOnUp();
       if(SDL_PointInRect(&mouse.position, &resetButton.position)){
-        reset();
+        boardElement->reset();
 	board->reset();
       }
       if(SDL_PointInRect(&mouse.position, &switchSideButton.position))
-	board->switchSide();
+	boardElement->switchSide();
     
       break;
       
@@ -186,7 +182,7 @@ void renderTiles(){
 
   for(int i = 0; i < 8; i++)
     for(int j = 0; j < 8; j++) {
-      SDL_Rect tileDstRect = board->getTileScreenRect({j, i});
+      SDL_Rect tileDstRect = boardElement->getTileScreenRect({j, i});
       
       SDL_Rect tileSrcRect = {0, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       if(!isWhite({j, i})) tileSrcRect.y += SPRITE_TILE_SIZE;
@@ -199,23 +195,23 @@ void renderTiles(){
     if(!isWhite(selection.piece.position)) tileSrcRect.y += SPRITE_TILE_SIZE;
 
     
-    SDL_Rect tileDstRect = board->getTileScreenRect(selection.piece.position);
+    SDL_Rect tileDstRect = boardElement->getTileScreenRect(selection.piece.position);
 
     SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
 
     
-    std::vector<SDL_Point> moves = getMoves(selection.piece);
-    std::vector<SDL_Point> captureMoves = getCaptureMoves(selection.piece);
+    std::vector<SDL_Point> moves = board->getMoves(selection.piece);
+    std::vector<SDL_Point> captureMoves = board->getCaptureMoves(selection.piece);
 
     for(auto& move: moves){
-      tileDstRect = board->getTileScreenRect({move.x, move.y});
+      tileDstRect = boardElement->getTileScreenRect({move.x, move.y});
       tileSrcRect = {2*SPRITE_TILE_SIZE, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
     }
     
     for(auto& move: captureMoves){
-      tileDstRect = board->getTileScreenRect({move.x, move.y});
+      tileDstRect = boardElement->getTileScreenRect({move.x, move.y});
       tileSrcRect = {2*SPRITE_TILE_SIZE, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
       
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
@@ -231,11 +227,11 @@ SDL_Rect getPieceSrcRect(Piece& piece){
     SPRITE_PIECE_SIZE, SPRITE_PIECE_SIZE};}
 
 SDL_Rect getPieceDstRect(Piece& piece){
-  return board->getTileScreenRect(piece.position);}
+  return boardElement->getTileScreenRect(piece.position);}
 
 void renderPieces(){
     
-  for(auto& piece: pieces){
+  for(auto& piece: board->pieces){
     if(picked.any && picked.piece.position == piece.position) continue;
 
     SDL_Rect pieceSrcRect = getPieceSrcRect(piece);
@@ -272,8 +268,6 @@ int main(){
 
   TTF_Init();
   font = TTF_OpenFont("./SpaceMono-Regular.ttf", 200);
-
-  pieces = initialPieces;
 
   
   SDL_Event event;

@@ -46,105 +46,14 @@ void renderTextSolid(SDL_Renderer* renderer, TTF_Font* font, const char* text, S
 
 TTF_Font* font;
 
-
-enum PieceType{Rook, Knight, Bishop, King, Queen, Pawn};
-
-enum PieceColor{Black, White};
-
-typedef struct{
-  PieceType type;
-  PieceColor color;
-  SDL_Point position;
-  SDL_Point spritePosition;
-} Piece;
-
 enum GameMode{Free, Game};
 
-PieceColor turn = White;
-GameMode gameMode = Free;
-
-std::vector<Piece> pieces;
-
-
-bool isAnyPieceAt(SDL_Point position)
-{
-  for(auto& piece: pieces) if(piece.position == position) return true;
-  return false;
-}
-
-
-Piece getPieceAt(SDL_Point position)
-{
-  for(auto& piece: pieces) if(piece.position == position) return piece;
-  return {};
-}
-
-void setPieceAt(Piece piece, SDL_Point position)
-{
-  piece.position = position;
-  for(size_t i = 0; i < pieces.size(); i++)
-    if(pieces[i].position == position){pieces[i] = piece; return;}
-  pieces.push_back(piece);
-}
-
-void deletePieceAt(SDL_Point position)
-{
-  for(size_t i = 0; i < pieces.size(); i++)
-    if(pieces[i].position == position){
-      pieces.erase(pieces.begin() + i); break;}
-}
 
 
 typedef struct{
   SDL_Point position = {0, 0};
 } Mouse;
 
-
-bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
-
-
-std::vector<Piece> initialPieces = {
-  {Rook, White, {0, 0}, {4, 0}},
-  {Rook, White, {7, 0}, {4, 0}},
-  {Rook, Black, {0, 7}, {4, 1}},
-  {Rook, Black, {7, 7}, {4, 1}},
-  
-  {Knight, White, {1, 0}, {3, 0}},
-  {Knight, White, {6, 0}, {3, 0}},
-  {Knight, Black, {1, 7}, {3, 1}},
-  {Knight, Black, {6, 7}, {3, 1}},
-  
-  {Bishop, White, {2, 0}, {2, 0}},
-  {Bishop, White, {5, 0}, {2, 0}},
-  {Bishop, Black, {2, 7}, {2, 1}},
-  {Bishop, Black, {5, 7}, {2, 1}},
-  
-  {Queen, White, {4, 0}, {1, 0}},
-  {Queen, Black, {4, 7}, {1, 1}},
-  
-  {King, White, {3, 0}, {0, 0}},
-  {King, Black, {3, 7}, {0, 1}},
-  
-  {Pawn, White, {0, 1}, {5, 0}},
-  {Pawn, White, {1, 1}, {5, 0}},
-  {Pawn, White, {2, 1}, {5, 0}},
-  {Pawn, White, {3, 1}, {5, 0}},
-  {Pawn, White, {4, 1}, {5, 0}},
-  {Pawn, White, {5, 1}, {5, 0}},
-  {Pawn, White, {6, 1}, {5, 0}},
-  {Pawn, White, {7, 1}, {5, 0}},
-  
-  {Pawn, Black, {0, 6}, {5, 1}},
-  {Pawn, Black, {1, 6}, {5, 1}},
-  {Pawn, Black, {2, 6}, {5, 1}},
-  {Pawn, Black, {3, 6}, {5, 1}},
-  {Pawn, Black, {4, 6}, {5, 1}},
-  {Pawn, Black, {5, 6}, {5, 1}},
-  {Pawn, Black, {6, 6}, {5, 1}},
-  {Pawn, Black, {7, 6}, {5, 1}}
-};
-
-void reset(){pieces = initialPieces;}
 
 
 #endif
