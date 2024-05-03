@@ -61,10 +61,10 @@ std::vector<Piece> initialPieces = {
 
 
 struct Board{
-  PieceColor turn = White;
   std::vector<Piece> pieces = initialPieces;
-
-
+  Piece board[8][8];
+  PieceColor turn = White;
+  
   void switchTurn(){
     if(turn == White) turn = Black;
     else turn = White;}

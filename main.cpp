@@ -1,5 +1,3 @@
-/* TODO: Separate Chess as a game (like an engine) and GUI / interactions with GUI*/ 
-
 #include <iostream>
 
 #include <SDL2/SDL.h>
@@ -22,7 +20,6 @@ Window* window = new Window();
 SDL_Renderer* renderer;
 
 GameMode gameMode = Free;
-
 
 GUI::Board* boardElement = new GUI::Board();
 Chess::Board* board = new Chess::Board();
@@ -83,53 +80,48 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
 }
    
 void updatePickupOnUp(){
-  using namespace GUI;
-  
   if(!picked.any) return;
   picked.any = false;
   
   if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
-  SDL_Point tilePosition = getTileIntersection(&mouse.position);
+  SDL_Point tile = getTileIntersection(&mouse.position);
   
-  bool moveWasMade = makeMove(picked.piece, tilePosition);
+  bool moveWasMade = makeMove(picked.piece, tile);
   if(moveWasMade && false) boardElement->switchSide();
-  
-  // TODO: make selection properly
-  // selection.same = false;
 }
 
 void updatePickupOnDown(){
-  using namespace GUI;
-  
   if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
-
-  SDL_Point tilePosition = getTileIntersection(&mouse.position);
-  for(auto& piece: board->pieces)
-    if(tilePosition == piece.position && (gameMode == Free || piece.color == board->turn)){
+  SDL_Point tile = getTileIntersection(&mouse.position);
+  
+  if(board->isAnyPieceAt(tile)){
+    Chess::Piece piece = board->getPieceAt(tile);
+    if(gameMode == Free || piece.color == board->turn){
       picked.any = true;
       picked.piece = piece;
       picked.position = mouse.position;
     }
+  }
 }
 
 // TODO: Proper selection!
 void updateSelectionOnDown(){
-  using namespace GUI;
 
   selection.any = false;
   if(!SDL_PointInRect(&mouse.position, &boardElement->position)) return;
-  SDL_Point tilePosition = getTileIntersection(&mouse.position);
+  SDL_Point tile = getTileIntersection(&mouse.position);
 
-  for(auto& piece: board->pieces)
-    if(tilePosition == piece.position && (gameMode == Free || piece.color == board->turn)){
+  if(board->isAnyPieceAt(tile)){
+    Chess::Piece piece = board->getPieceAt(tile);
+    if(gameMode == Free || piece.color == board->turn){
       selection.any = true;
       selection.piece = piece;
-    } 
+    }
+  }
+
 }
 
 void updateSelectionOnUp(){
-  using namespace GUI;
-
   selection.any = false;
   
 }
