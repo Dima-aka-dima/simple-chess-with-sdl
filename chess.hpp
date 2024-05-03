@@ -1,17 +1,15 @@
 #ifndef CHESS_HPP
 #define CHESS_HPP
 
-#include <optional>
 #include <array>
 
 namespace Chess{
-
   
 enum PieceName{Rook, Knight, Bishop, King, Queen, Pawn};
 
 enum PieceColor{Black, White};
-PieceColor inverse(PieceColor color){
-  return (color == White) ? Black : White;}
+
+PieceColor operator!(PieceColor color){return (color == White) ? Black : White;}
   
 typedef struct {
   PieceName name;
@@ -19,8 +17,8 @@ typedef struct {
   bool isNone = true;
 } PieceType;
 
-template <typename T, std::size_t R, std::size_t C>
-using Array2d = std::array<std::array<T, C>, R>;
+  // template <typename T, std::size_t R, std::size_t C>
+  // using Array2d = std::array<std::array<T, C>, R>;
   
 typedef struct{
   PieceName name;
@@ -75,13 +73,13 @@ const std::vector<Piece> initialPieces = {
   
 struct Board{
   std::vector<Piece> pieces = initialPieces;
-  Array2d<PieceType, 8, 8> board;
+  // Array2d<PieceType, 8, 8> board;
   PieceColor turn = White;
 
-  Board(){
-    for(auto& piece: pieces)
-      board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
-  }
+//  Board(){
+//    for(auto& piece: pieces)
+//      board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
+//  }
   
   void switchTurn(){
     if(turn == White) turn = Black;
@@ -346,7 +344,7 @@ struct Board{
       if(piece.name == Pawn) continue;
    
       Piece invertedPiece = piece;
-      invertedPiece.color = inverse(color);
+      invertedPiece.color = !color;
 
       moves = getAllCaptureMoves(invertedPiece);
       for(auto& move: moves)
@@ -365,18 +363,28 @@ struct Board{
     std::vector<SDL_Point> moves = {};
     
     for(auto& move: allMoves)
-      if(!isAttacked(move, inverse(piece.color))) moves.push_back(move);
+      if(!isAttacked(move, !piece.color)) moves.push_back(move);
     return moves;
   }
 
+  bool isKingInCheck(PieceColor color){
+    for(auto& piece: pieces){
+      if(piece.color != color || piece.name != King) continue;
+
+      return isAttacked(piece.position, !color);
+    }
+  }
+
   std::vector<SDL_Point> getMoves(Piece& piece){
+
     std::vector<SDL_Point> allMoves = getAllMoves(piece);
+    
     if(piece.name != King) return allMoves;
 
     std::vector<SDL_Point> moves = {};
     
     for(auto& move: allMoves)
-      if(!isAttacked(move, inverse(piece.color))) moves.push_back(move);
+      if(!isAttacked(move, !piece.color)) moves.push_back(move);
     return moves;
   }
 
