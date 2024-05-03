@@ -91,9 +91,7 @@ struct Board{
     // board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
   }
   
-  void switchTurn(){
-    if(turn == White) turn = Black;
-    else turn = White;}
+  void switchTurn(){turn = !turn;}
   
   void reset(){
     pieces = initialPieces;
@@ -127,7 +125,11 @@ struct Board{
 	pieces.erase(pieces.begin() + i); break;}
   }
 
-
+  void makeMove(Piece piece, SDL_Point position){
+    set(piece, position);
+    deletePieceAt(piece.position);
+    switchTurn();
+  }
   
   std::vector<SDL_Point> getPawnMoves(SDL_Point p, PieceColor color){
     std::vector<SDL_Point> moves = {};
@@ -344,8 +346,8 @@ struct Board{
   }
 
   
-  bool isProtected(SDL_Point position, PieceColor color){
-    for(auto& piece: pieces){
+  bool isCovered(SDL_Point position, PieceColor color){
+    for(auto piece: pieces){
       if(piece.color != color) continue;
       if(piece.position == position) continue;
 
@@ -356,50 +358,77 @@ struct Board{
       for(auto& move: moves) if(move == position) return true;
 
       if(piece.name == Pawn) continue;
-   
-      Piece invertedPiece = piece;
-      invertedPiece.color = !color;
 
-      moves = getAllCaptureMoves(invertedPiece);
+      moves = getAllCaptureMoves(piece);
+      for(auto& move: moves)
+	if(move == position) return true;
+    
+      piece.color = !color;
+
+      moves = getAllCaptureMoves(piece);
       for(auto& move: moves)
 	if(move == position) return true;
     }
 
     return false;
   }
-  
-  bool isAttacked(SDL_Point position, PieceColor color){return isProtected(position, color);}
-  
-  std::vector<SDL_Point> getCaptureMoves(Piece& piece){
-    std::vector<SDL_Point> allMoves = getAllCaptureMoves(piece);
-    if(piece.name != King) return allMoves;
-
-    std::vector<SDL_Point> moves = {};
     
-    for(auto& move: allMoves)
-      if(!isAttacked(move, !piece.color)) moves.push_back(move);
-    return moves;
-  }
 
   bool isKingInCheck(PieceColor color){
     for(auto& piece: pieces){
       if(piece.color != color || piece.name != King) continue;
-
-      return isAttacked(piece.position, !color);
+      
+      return isCovered(piece.position, !color);
     }
+    
+    return false;
   }
 
-  std::vector<SDL_Point> getMoves(Piece& piece){
-
+  std::vector<SDL_Point> getMoves(Piece piece){
+    
     std::vector<SDL_Point> allMoves = getAllMoves(piece);
-    
-    if(piece.name != King) return allMoves;
-
     std::vector<SDL_Point> moves = {};
+
     
-    for(auto& move: allMoves)
-      if(!isAttacked(move, !piece.color)) moves.push_back(move);
+    if(!isKingInCheck(piece.color) && piece.name != King)
+      return allMoves;
+      
+    for(auto move: allMoves){
+	
+      // Why the fuck making one move and then moving back doesnt fucking word????
+      std::vector<Piece> savedPieces = pieces;
+      makeMove(piece, move);
+      if(!isKingInCheck(piece.color)) moves.push_back(move);
+      pieces = savedPieces;
+	
+    }
+
     return moves;
+    
+  }
+
+  
+  std::vector<SDL_Point> getCaptureMoves(Piece piece){
+    
+    std::vector<SDL_Point> allMoves = getAllCaptureMoves(piece);
+    std::vector<SDL_Point> moves = {};
+
+    
+    if(!isKingInCheck(piece.color) && piece.name != King)
+      return allMoves;
+      
+    for(auto move: allMoves){
+	
+      // Why the fuck making one move and then moving back doesnt fucking word????
+      std::vector<Piece> savedPieces = pieces;
+      makeMove(piece, move);
+      if(!isKingInCheck(piece.color)) moves.push_back(move);
+      pieces = savedPieces;
+	
+    }
+
+    return moves;
+    
   }
 
   void updateMoves(){
@@ -410,6 +439,7 @@ struct Board{
       moves[piece] = getMoves(piece);
       captureMoves[piece] = getCaptureMoves(piece);
     }
+
   }
 
 };

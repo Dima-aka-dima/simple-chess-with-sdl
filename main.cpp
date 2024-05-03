@@ -7,11 +7,6 @@
 #include "gui.hpp"
 #include "chess.hpp"
 
-// struct TestStruct{int x;};
-// bool operator< ( TestStruct a, TestStruct b ) { return a.x < b.x; }
-
-
-
 bool running;
 
 SDL_Texture* texturePieces;
@@ -50,9 +45,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
     if(!board->any(position)){
       for(auto& move: moves)
 	if(move == position){
-	  board->set(piece, position);
-	  board->deletePieceAt(piece.position);
-	  board->switchTurn();
+	  board->makeMove(piece, position);
 	  board->updateMoves();
 	  return true;
 	}
@@ -63,10 +56,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
     
     for(auto& move: captureMoves){
       if(move == position){
-
-	board->set(piece, position);
-	board->deletePieceAt(piece.position);
-	board->switchTurn();
+	board->makeMove(piece, position);
 	board->updateMoves();
 	return true;
       }
@@ -76,8 +66,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
   
   } else if(gameMode == Free){
     if(!board->any(position) || ((*board)[position].color != piece.color)){
-      board->set(piece, position);
-      board->deletePieceAt(piece.position);
+      board->makeMove(piece, position);
       board->updateMoves();
       return true;
     }
