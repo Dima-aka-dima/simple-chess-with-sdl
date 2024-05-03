@@ -95,7 +95,11 @@ struct Board{
     if(turn == White) turn = Black;
     else turn = White;}
   
-  void reset(){pieces = initialPieces; turn = White;}
+  void reset(){
+    pieces = initialPieces;
+    turn = White;
+    updateMoves();
+  }
 
   bool any(SDL_Point position)
   {
