@@ -33,7 +33,6 @@ struct Window{
 
 
 namespace GUI{
-
   
 struct Board{
   SDL_Rect position;
