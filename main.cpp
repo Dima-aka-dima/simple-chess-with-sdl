@@ -259,7 +259,6 @@ int main(){
   TTF_Init();
   font = TTF_OpenFont("./SpaceMono-Regular.ttf", 200);
 
-  
   SDL_Event event;
   running = true;
   while(running){

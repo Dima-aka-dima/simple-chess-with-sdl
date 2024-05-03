@@ -133,62 +133,35 @@ struct Board{
     return moves;
   }
 
+  bool is(SDL_Point p){
+    return SDL_PointInRect(&p, new SDL_Rect({0, 0, 8, 8}));}
+  
   std::vector<SDL_Point> getRookMoves(SDL_Point p){
     std::vector<SDL_Point> moves = {};
+    SDL_Point to;
+    for(int d = 1; d < 8; d++){
+      to = {p.x, p.y + d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x, p.y - d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y}; if(is(to) && !any(to)) moves.push_back(to); else break;}
 
-    for(int x = p.x + 1; x < 8; x++){
-      if(any({x, p.y})) break;
-      moves.push_back({x, p.y});
-    }
-  
-    for(int x = p.x - 1; x >= 0; x--){
-      if(any({x, p.y})) break;
-      moves.push_back({x, p.y});
-    }
-
-    for(int y = p.y + 1; y < 8; y++){
-      if(any({p.x, y})) break;
-      moves.push_back({p.x, y});
-    }
-  
-    for(int y = p.y - 1; y >= 0; y--){
-      if(any({p.x, y})) break;
-      moves.push_back({p.x, y});
-    }
-  
     return moves;
   }
-
+  
   std::vector<SDL_Point> getBishopMoves(SDL_Point p){
     std::vector<SDL_Point> moves = {};
-
-    for(int d = 1; ;d++){
-      int x = p.x + d, y = p.y + d;
-      if(x == 8 || y == 8) break;
-      if(any({x, y})) break;
-      moves.push_back({x, y});
-    }
-
-    for(int d = 1; ;d++){
-      int x = p.x + d, y = p.y - d;
-      if(x == 8 || y == -1) break;
-      if(any({x, y})) break;
-      moves.push_back({x, y});
-    }
-
-    for(int d = 1; ;d++){
-      int x = p.x - d, y = p.y + d;
-      if(x == -1 || y == 8) break;
-      if(any({x, y})) break;
-      moves.push_back({x, y});
-    }
-
-    for(int d = 1; ;d++){
-      int x = p.x - d, y = p.y - d;
-      if(x == -1 || y == -1) break;
-      if(any({x, y})) break;
-      moves.push_back({x, y});
-    }
+    SDL_Point to;
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y + d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y - d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y + d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y - d}; if(is(to) && !any(to)) moves.push_back(to); else break;}
 
     return moves;
   }
@@ -196,25 +169,19 @@ struct Board{
 
   std::vector<SDL_Point> getQueenMoves(SDL_Point& position){
     std::vector<SDL_Point> moves = getRookMoves(position);
-    for(auto& move: getBishopMoves(position))
-      moves.push_back(move);
+    std::vector<SDL_Point> diagonalMoves = getBishopMoves(position);
+    moves.insert(moves.end(), diagonalMoves.begin(), diagonalMoves.end());
     return moves;
   }
 
   std::vector<SDL_Point> getKnightMoves(SDL_Point& p){
     std::vector<SDL_Point> moves = {};
-
-    std::vector<SDL_Point> deltas = {
+    std::vector<SDL_Point> knightDeltas = {
       {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
       {1, 2}, {-1, 2}, {1, -2}, {-1, -2}};
-
-    for(auto d: deltas){
-      SDL_Point to = p + d;
-      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-
-      if(!any(to)) moves.push_back(to);
-    }
-  
+    SDL_Point to;
+    for(auto d: knightDeltas){
+      to = p + d; if(is(to) && !any(to)) moves.push_back(to);}
     return moves;
   }
 
@@ -253,110 +220,60 @@ struct Board{
     return moves;
   }
 
-
   std::vector<SDL_Point> getRookCaptureMoves(SDL_Point p, PieceColor color){
     std::vector<SDL_Point> moves = {};
-
-    for(int x = p.x + 1; x < 8; x++)
-      if(any({x, p.y})){
-	if((*this)[{x, p.y}].color != color)
-	  moves.push_back({x, p.y});
-	break;
-      }
-  
-    for(int x = p.x - 1; x >= 0; x--)
-      if(any({x, p.y})){
-	if((*this)[{x, p.y}].color != color)
-	  moves.push_back({x, p.y});
-	break;
-      }
-  
-    for(int y = p.y + 1; y < 8; y++)
-      if(any({p.x, y})){
-	if((*this)[{p.x, y}].color != color)
-	  moves.push_back({p.x, y});
-	break;
-      }
-    
-    for(int y = p.y - 1; y >= 0; y--)
-      if(any({p.x, y})){
-	if((*this)[{p.x, y}].color != color)
-	  moves.push_back({p.x, y});
-	break;
-      }
-  
+    SDL_Point to;
+    for(int d = 1; d < 8; d++){
+      to = {p.x, p.y + d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x, p.y - d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+      
     return moves;
   }
-
 
   std::vector<SDL_Point> getBishopCaptureMoves(SDL_Point p, PieceColor color){
     std::vector<SDL_Point> moves = {};
-
-    for(int d = 1; ;d++){
-      SDL_Point to = p + (SDL_Point){d, d};
-      if(to.x == 8 || to.y == 8) break;
-      if(any(to)){
-	if((*this)[to].color != color)
-	  moves.push_back(to);
-	break;
-      }
-    }
-
-    for(int d = 1; ;d++){
-      SDL_Point to = p + (SDL_Point){d, -d};
-      if(to.x == 8 || to.y == -1) break;
-      if(any(to)){
-	if((*this)[to].color != color)
-	  moves.push_back(to);
-	break;
-      }
-    }
-  
-    for(int d = 1; ;d++){
-      SDL_Point to = p + (SDL_Point){-d, d};
-      if(to.x == -1 || to.y == 8) break;
-      if(any(to)){
-	if((*this)[to].color != color)
-	  moves.push_back(to);
-	break;
-      }
-    }
-  
-    for(int d = 1; ;d++){
-      SDL_Point to = p + (SDL_Point){-d, -d};
-      if(to.x == -1 || to.y == -1) break;
-      if(any(to)){
-	if((*this)[to].color != color)
-	  moves.push_back(to);
-	break;
-      }
-    }
-
+    SDL_Point to;
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y + d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x + d, p.y - d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y + d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+    for(int d = 1; d < 8; d++){
+      to = {p.x - d, p.y - d};
+      if(is(to) && any(to)){if((*this)[to].color != color) moves.push_back(to);break;}}
+      
     return moves;
   }
-
-
+  
   std::vector<SDL_Point> getQueenCaptureMoves(SDL_Point& position, PieceColor color){
     std::vector<SDL_Point> moves = getRookCaptureMoves(position, color);
-    for(auto& move: getBishopCaptureMoves(position, color))
-      moves.push_back(move);
+    std::vector<SDL_Point> diagonalMoves = getBishopCaptureMoves(position, color);
+    moves.insert(moves.end(), diagonalMoves.begin(), diagonalMoves.end());
     return moves;
   }
 
+  
   std::vector<SDL_Point> getKnightCaptureMoves(SDL_Point& p, PieceColor color){
     std::vector<SDL_Point> moves = {};
-
-    std::vector<SDL_Point> deltas = {
+    std::vector<SDL_Point> knightDeltas = {
       {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
       {1, 2}, {-1, 2}, {1, -2}, {-1, -2}};
-
-    for(auto d: deltas){
-      SDL_Point to = p + d;
-      if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-
-      if(any(to) && ((*this)[to].color != color)) moves.push_back(to);
-    }
-  
+    SDL_Point to;
+    for(auto d: knightDeltas){
+      to = p + d; if(is(to) && any(to) && ((*this)[to].color != color)) moves.push_back(to);}
     return moves;
   }
 
@@ -384,7 +301,7 @@ struct Board{
     return {};
   }
 
-
+  /*
   bool isProtected(SDL_Point position){
     for(auto& piece: pieces){
       if(piece.color == turn) continue;
@@ -410,33 +327,30 @@ struct Board{
 
     return false;
   }
-
-
+  */
+  
   std::vector<SDL_Point> getKingMoves(SDL_Point& p){
     std::vector<SDL_Point> moves = {};
-  
-    for(int dx = -1; dx <= 1; dx++)
-      for(int dy = -1; dy <= 1; dy++){
-	if((dx == 0) && (dy == 0)) continue;
-	SDL_Point to = p + (SDL_Point){dx, dy};
-	if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-	if(!any(to) && !isProtected(to)) moves.push_back(to);
-      }
+
+    SDL_Point kingDeltas[8] = {
+      {-1, -1}, {1, 1}, {1, -1}, {-1, 1}, {0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+    SDL_Point to;
+    for(auto d: kingDeltas){
+      to = p + d; if(is(to) && !any(to)) moves.push_back(to);}
 
     return moves;
   }
 
   std::vector<SDL_Point> getKingCaptureMoves(SDL_Point& p, PieceColor color){
     std::vector<SDL_Point> moves = {};
-  
-    for(int dx = -1; dx <= 1; dx++)
-      for(int dy = -1; dy <= 1; dy++){
-	if((dx == 0) && (dy == 0)) continue;
-	SDL_Point to = p + (SDL_Point){dx, dy};
-	if((to.x < 0) || (to.y < 0) || (to.x >= 8) || (to.y >= 8)) continue;
-	if(any(to) && ((*this)[to].color != color) && !isProtected(to))
-	  moves.push_back(to);
-      }
+
+    SDL_Point kingDeltas[8] = {
+      {-1, -1}, {1, 1}, {1, -1}, {-1, 1}, {0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+    SDL_Point to;
+    for(auto d: kingDeltas){
+      to = p + d; if(is(to) && any(to) && ((*this)[to].color != color)) moves.push_back(to);}
 
     return moves;
   }
