@@ -1,7 +1,11 @@
 #ifndef CHESS_HPP
 #define CHESS_HPP
 
+#include <optional>
+#include <array>
+
 namespace Chess{
+
   
 enum PieceName{Rook, Knight, Bishop, King, Queen, Pawn};
 
@@ -10,7 +14,11 @@ enum PieceColor{Black, White};
 typedef struct {
   PieceName name;
   PieceColor color;
+  bool isNone = true;
 } PieceType;
+
+template <typename T, std::size_t R, std::size_t C>
+using Array2d = std::array<std::array<T, C>, R>;
   
 typedef struct{
   PieceName name;
@@ -22,8 +30,7 @@ typedef struct{
 
 bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
 
-
-std::vector<Piece> initialPieces = {
+const std::vector<Piece> initialPieces = {
   {Rook, White, {0, 0}, {4, 0}},
   {Rook, White, {7, 0}, {4, 0}},
   {Rook, Black, {0, 7}, {4, 1}},
@@ -63,11 +70,16 @@ std::vector<Piece> initialPieces = {
   {Pawn, Black, {6, 6}, {5, 1}},
   {Pawn, Black, {7, 6}, {5, 1}}
 };
-
+  
 struct Board{
   std::vector<Piece> pieces = initialPieces;
-  PieceType board[8][8];
+  Array2d<PieceType, 8, 8> board;
   PieceColor turn = White;
+
+  Board(){
+    for(auto& piece: pieces)
+      board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
+  }
   
   void switchTurn(){
     if(turn == White) turn = Black;
