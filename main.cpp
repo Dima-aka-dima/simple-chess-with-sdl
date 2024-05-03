@@ -7,6 +7,11 @@
 #include "gui.hpp"
 #include "chess.hpp"
 
+// struct TestStruct{int x;};
+// bool operator< ( TestStruct a, TestStruct b ) { return a.x < b.x; }
+
+
+
 bool running;
 
 SDL_Texture* texturePieces;
@@ -39,15 +44,16 @@ SDL_Point getTileIntersection(SDL_Point* point){
 // Returns whether or not the move was made
 bool makeMove(Chess::Piece piece, SDL_Point position){
   if(gameMode == Game){
-    std::vector<SDL_Point> moves = board->getMoves(piece);
-    std::vector<SDL_Point> captureMoves = board->getCaptureMoves(piece);
+    std::vector<SDL_Point> moves = board->moves[piece];
+    std::vector<SDL_Point> captureMoves = board->captureMoves[piece];
 
     if(!board->any(position)){
       for(auto& move: moves)
 	if(move == position){
-	  board->setPieceAt(piece, position);
+	  board->set(piece, position);
 	  board->deletePieceAt(piece.position);
 	  board->switchTurn();
+	  board->updateMoves();
 	  return true;
 	}
       return false;
@@ -58,9 +64,10 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
     for(auto& move: captureMoves){
       if(move == position){
 
-	board->setPieceAt(piece, position);
+	board->set(piece, position);
 	board->deletePieceAt(piece.position);
 	board->switchTurn();
+	board->updateMoves();
 	return true;
       }
     }
@@ -69,8 +76,9 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
   
   } else if(gameMode == Free){
     if(!board->any(position) || ((*board)[position].color != piece.color)){
-      board->setPieceAt(piece, position);
+      board->set(piece, position);
       board->deletePieceAt(piece.position);
+      board->updateMoves();
       return true;
     }
     return false;
@@ -190,8 +198,8 @@ void renderTiles(){
     SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
 
     
-    std::vector<SDL_Point> moves = board->getMoves(selection.piece);
-    std::vector<SDL_Point> captureMoves = board->getCaptureMoves(selection.piece);
+    std::vector<SDL_Point> moves = board->moves[selection.piece];
+    std::vector<SDL_Point> captureMoves = board->captureMoves[selection.piece];
 
     for(auto& move: moves){
       tileDstRect = boardElement->getTileScreenRect({move.x, move.y});

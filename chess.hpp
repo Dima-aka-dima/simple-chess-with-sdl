@@ -2,6 +2,8 @@
 #define CHESS_HPP
 
 #include <array>
+#include <map>
+#include <tuple>
 
 namespace Chess{
   
@@ -26,7 +28,11 @@ typedef struct{
   SDL_Point position;
   SDL_Point spritePosition;
 } Piece;
-  
+
+  bool operator<(Piece a, Piece b){
+    return std::make_tuple(a.name, a.color, a.position.x, a.position.y) <\
+      std::make_tuple(b.name, b.color, b.position.x, b.position.y);
+  }
 
 bool isWhite(SDL_Point p){return ((p.x + p.y) % 2 == 0);}
 
@@ -71,15 +77,19 @@ const std::vector<Piece> initialPieces = {
   {Pawn, Black, {7, 6}, {5, 1}}
 };
   
+  
+  
 struct Board{
   std::vector<Piece> pieces = initialPieces;
   // Array2d<PieceType, 8, 8> board;
   PieceColor turn = White;
-
-//  Board(){
-//    for(auto& piece: pieces)
-//      board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
-//  }
+  std::map<Chess::Piece, std::vector<SDL_Point>> moves, captureMoves;
+    
+  Board(){
+    updateMoves();
+    // for(auto& piece: pieces)
+    // board[piece.position.x][piece.position.y] ={piece.name, piece.color, false};
+  }
   
   void switchTurn(){
     if(turn == White) turn = Black;
@@ -98,7 +108,7 @@ struct Board{
     return {};    
   }
 
-  void setPieceAt(Piece piece, SDL_Point position)
+  void set(Piece piece, SDL_Point position)
   {
     piece.position = position;
     for(size_t i = 0; i < pieces.size(); i++)
@@ -388,8 +398,17 @@ struct Board{
     return moves;
   }
 
+  void updateMoves(){
+    captureMoves.clear();
+    moves.clear();
+
+    for(auto& piece: pieces){
+      moves[piece] = getMoves(piece);
+      captureMoves[piece] = getCaptureMoves(piece);
+    }
+  }
+
 };
-  
   
 }
 
