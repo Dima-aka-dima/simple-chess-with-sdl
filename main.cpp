@@ -9,8 +9,6 @@
 #include "gui.hpp"
 #include "chess.hpp"
 
-using namespace Chess;
-
 bool running;
 
 SDL_Texture* texturePieces;
@@ -42,7 +40,7 @@ SDL_Point getTileIntersection(SDL_Point* point){
 
 
 // Returns whether or not the move was made
-bool makeMove(Piece piece, SDL_Point position){
+bool makeMove(Chess::Piece piece, SDL_Point position){
   if(gameMode == Game){
     std::vector<SDL_Point> moves = board->getMoves(piece);
     std::vector<SDL_Point> captureMoves = board->getCaptureMoves(piece);
@@ -185,14 +183,14 @@ void renderTiles(){
       SDL_Rect tileDstRect = boardElement->getTileScreenRect({j, i});
       
       SDL_Rect tileSrcRect = {0, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};
-      if(!isWhite({j, i})) tileSrcRect.y += SPRITE_TILE_SIZE;
+      if(!Chess::isWhite({j, i})) tileSrcRect.y += SPRITE_TILE_SIZE;
       SDL_RenderCopy(renderer, textureTiles, &tileSrcRect, &tileDstRect);
     }
 
   
   if(selection.any){
     SDL_Rect tileSrcRect = {SPRITE_TILE_SIZE, 0, SPRITE_TILE_SIZE, SPRITE_TILE_SIZE};;
-    if(!isWhite(selection.piece.position)) tileSrcRect.y += SPRITE_TILE_SIZE;
+    if(!Chess::isWhite(selection.piece.position)) tileSrcRect.y += SPRITE_TILE_SIZE;
 
     
     SDL_Rect tileDstRect = boardElement->getTileScreenRect(selection.piece.position);
@@ -220,13 +218,13 @@ void renderTiles(){
   
 }
 
-SDL_Rect getPieceSrcRect(Piece& piece){
+SDL_Rect getPieceSrcRect(Chess::Piece& piece){
   return {
     piece.spritePosition.x*SPRITE_PIECE_SIZE,
     piece.spritePosition.y*SPRITE_PIECE_SIZE,
     SPRITE_PIECE_SIZE, SPRITE_PIECE_SIZE};}
 
-SDL_Rect getPieceDstRect(Piece& piece){
+SDL_Rect getPieceDstRect(Chess::Piece& piece){
   return boardElement->getTileScreenRect(piece.position);}
 
 void renderPieces(){
