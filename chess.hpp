@@ -12,7 +12,7 @@ enum PieceName{Rook, Knight, Bishop, King, Queen, Pawn};
 enum PieceColor{Black, White};
 
 PieceColor operator!(PieceColor color){return (color == White) ? Black : White;}
-  
+
 typedef struct {
   PieceName name;
   PieceColor color;
@@ -128,7 +128,6 @@ struct Board{
   void makeMove(Piece piece, SDL_Point position){
     set(piece, position);
     deletePieceAt(piece.position);
-    switchTurn();
   }
   
   std::vector<SDL_Point> getPawnMoves(SDL_Point p, PieceColor color){
@@ -431,6 +430,7 @@ struct Board{
     
   }
 
+
   void updateMoves(){
     captureMoves.clear();
     moves.clear();
@@ -439,9 +439,19 @@ struct Board{
       moves[piece] = getMoves(piece);
       captureMoves[piece] = getCaptureMoves(piece);
     }
-
   }
 
+  
+  bool isMate(PieceColor color){
+    if(!isKingInCheck(color)) return false;
+    for(auto& piece: pieces){
+      if(piece.color != color) continue;
+
+      if(moves[piece].size() != 0) return false;
+    }
+
+    return true;
+  }
 };
   
 }

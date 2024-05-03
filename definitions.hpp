@@ -14,6 +14,8 @@ const SDL_Color WHITE_TILE_COLOR = {238, 238, 210, 255};
 const SDL_Color SELECTED_TILE_BLACK_COLOR = {187, 203, 43, 255};
 const SDL_Color SELECTED_TILE_WHITE_COLOR =  {247, 247, 105, 255};
 
+#define SWITCH_SIDE_MODE false
+
 bool operator==(SDL_Point const& a, SDL_Point const& b){
   return (a.x == b.x) && (a.y == b.y);}
 

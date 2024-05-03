@@ -19,7 +19,7 @@ Mouse mouse;
 Window* window = new Window();
 SDL_Renderer* renderer;
 
-GameMode gameMode = Free;
+GameMode gameMode = Game;
 
 GUI::Board* boardElement = new GUI::Board();
 Chess::Board* board = new Chess::Board();
@@ -47,6 +47,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
 	if(move == position){
 	  board->makeMove(piece, position);
 	  board->updateMoves();
+	  board->switchTurn();
 	  return true;
 	}
       return false;
@@ -58,6 +59,7 @@ bool makeMove(Chess::Piece piece, SDL_Point position){
       if(move == position){
 	board->makeMove(piece, position);
 	board->updateMoves();
+	board->switchTurn();
 	return true;
       }
     }
@@ -84,7 +86,14 @@ void updatePickupOnUp(){
   SDL_Point tile = getTileIntersection(&mouse.position);
   
   bool moveWasMade = makeMove(picked.piece, tile);
-  if(moveWasMade && false) boardElement->switchSide();
+  if(moveWasMade){
+    if(SWITCH_SIDE_MODE) boardElement->switchSide();
+    if(board->isMate(board->turn)){
+      std::cout << "Mate! ";
+      if(board->turn == Chess::White) std::cout << "Black wins\n";
+      else std::cout << "White wins\n";
+    }
+  }
 }
 
 void updatePickupOnDown(){
