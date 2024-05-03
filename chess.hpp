@@ -10,7 +10,9 @@ namespace Chess{
 enum PieceName{Rook, Knight, Bishop, King, Queen, Pawn};
 
 enum PieceColor{Black, White};
-
+PieceColor inverse(PieceColor color){
+  return (color == White) ? Black : White;}
+  
 typedef struct {
   PieceName name;
   PieceColor color;
@@ -184,6 +186,19 @@ struct Board{
       to = p + d; if(is(to) && !any(to)) moves.push_back(to);}
     return moves;
   }
+  
+  std::vector<SDL_Point> getAllKingMoves(SDL_Point& p){
+    std::vector<SDL_Point> moves = {};
+
+    SDL_Point kingDeltas[8] = {
+      {-1, -1}, {1, 1}, {1, -1}, {-1, 1}, {0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+    SDL_Point to;
+    for(auto d: kingDeltas){
+      to = p + d; if(is(to) && !any(to)) moves.push_back(to);}
+
+    return moves;
+  }
 
   std::vector<SDL_Point> getPawnCaptureMoves(SDL_Point& p, PieceColor color){
     std::vector<SDL_Point> moves;
@@ -277,72 +292,8 @@ struct Board{
     return moves;
   }
 
-  std::vector<SDL_Point> getNonKingMoves(Piece piece){
-    switch(piece.name){
-    case Pawn: return getPawnMoves(piece.position, piece.color);
-    case Rook: return getRookMoves(piece.position);
-    case Knight: return getKnightMoves(piece.position);
-    case Bishop: return getBishopMoves(piece.position);
-    case Queen: return getQueenMoves(piece.position);
-    default: return {};
-    }
-    return {};  
-  }
-
-  std::vector<SDL_Point> getNonKingCaptureMoves(Piece piece){
-    switch(piece.name){
-    case Pawn: return getPawnCaptureMoves(piece.position, piece.color);
-    case Rook: return getRookCaptureMoves(piece.position, piece.color);
-    case Knight: return getKnightCaptureMoves(piece.position, piece.color);
-    case Bishop: return getBishopCaptureMoves(piece.position, piece.color);
-    case Queen: return getQueenCaptureMoves(piece.position, piece.color);
-    default: return {};
-    }
-    return {};
-  }
-
-  /*
-  bool isProtected(SDL_Point position){
-    for(auto& piece: pieces){
-      if(piece.color == turn) continue;
-
-      // TODO: handle King case
-      if(piece.name == King) continue;
-
-    
-      std::vector<SDL_Point> moves = getNonKingMoves(piece);
-      if(piece.name == Pawn)
-	moves = getPawnPossibleCaptureMoves(piece.position, piece.color);
-    
-      for(auto& move: moves)
-	if(move == position) return true;
-
-   
-      Piece invertedPiece = piece;
-      invertedPiece.color = turn;
-      moves = getNonKingCaptureMoves(invertedPiece);
-      for(auto& move: moves)
-	if(move == position) return true;
-    }
-
-    return false;
-  }
-  */
   
-  std::vector<SDL_Point> getKingMoves(SDL_Point& p){
-    std::vector<SDL_Point> moves = {};
-
-    SDL_Point kingDeltas[8] = {
-      {-1, -1}, {1, 1}, {1, -1}, {-1, 1}, {0, 1}, {1, 0}, {0, -1}, {-1, 0}};
-
-    SDL_Point to;
-    for(auto d: kingDeltas){
-      to = p + d; if(is(to) && !any(to)) moves.push_back(to);}
-
-    return moves;
-  }
-
-  std::vector<SDL_Point> getKingCaptureMoves(SDL_Point& p, PieceColor color){
+  std::vector<SDL_Point> getAllKingCaptureMoves(SDL_Point& p, PieceColor color){
     std::vector<SDL_Point> moves = {};
 
     SDL_Point kingDeltas[8] = {
@@ -355,14 +306,78 @@ struct Board{
     return moves;
   }
 
-  std::vector<SDL_Point> getCaptureMoves(Piece piece){
-    if(piece.name == King) return getKingCaptureMoves(piece.position, piece.color);
-    else return getNonKingCaptureMoves(piece);  
+  std::vector<SDL_Point> getAllMoves(Piece piece){
+    switch(piece.name){
+    case Pawn: return getPawnMoves(piece.position, piece.color);
+    case Rook: return getRookMoves(piece.position);
+    case Knight: return getKnightMoves(piece.position);
+    case Bishop: return getBishopMoves(piece.position);
+    case Queen: return getQueenMoves(piece.position);
+    case King: return getAllKingMoves(piece.position);
+    }
+    return {};  
+  }
+
+  
+  std::vector<SDL_Point> getAllCaptureMoves(Piece piece){
+    switch(piece.name){
+    case Pawn: return getPawnCaptureMoves(piece.position, piece.color);
+    case Rook: return getRookCaptureMoves(piece.position, piece.color);
+    case Knight: return getKnightCaptureMoves(piece.position, piece.color);
+    case Bishop: return getBishopCaptureMoves(piece.position, piece.color);
+    case Queen: return getQueenCaptureMoves(piece.position, piece.color);
+    case King: return getAllKingCaptureMoves(piece.position, piece.color);
+    }
+    return {};  
+  }
+
+  
+  bool isProtected(SDL_Point position, PieceColor color){
+    for(auto& piece: pieces){
+      if(piece.color != color) continue;
+      if(piece.position == position) continue;
+
+    
+      std::vector<SDL_Point> moves = getAllMoves(piece);
+      if(piece.name == Pawn) moves = getPawnPossibleCaptureMoves(piece.position, piece.color);
+    
+      for(auto& move: moves) if(move == position) return true;
+
+      if(piece.name == Pawn) continue;
+   
+      Piece invertedPiece = piece;
+      invertedPiece.color = inverse(color);
+
+      moves = getAllCaptureMoves(invertedPiece);
+      for(auto& move: moves)
+	if(move == position) return true;
+    }
+
+    return false;
+  }
+  
+  bool isAttacked(SDL_Point position, PieceColor color){return isProtected(position, color);}
+  
+  std::vector<SDL_Point> getCaptureMoves(Piece& piece){
+    std::vector<SDL_Point> allMoves = getAllCaptureMoves(piece);
+    if(piece.name != King) return allMoves;
+
+    std::vector<SDL_Point> moves = {};
+    
+    for(auto& move: allMoves)
+      if(!isAttacked(move, inverse(piece.color))) moves.push_back(move);
+    return moves;
   }
 
   std::vector<SDL_Point> getMoves(Piece& piece){
-    if(piece.name == King) return getKingMoves(piece.position);
-    else return getNonKingMoves(piece);  
+    std::vector<SDL_Point> allMoves = getAllMoves(piece);
+    if(piece.name != King) return allMoves;
+
+    std::vector<SDL_Point> moves = {};
+    
+    for(auto& move: allMoves)
+      if(!isAttacked(move, inverse(piece.color))) moves.push_back(move);
+    return moves;
   }
 
 };
